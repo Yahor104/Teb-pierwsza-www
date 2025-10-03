@@ -1,0 +1,136 @@
+*{
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+}
+
+body{
+
+  width: 1000px;
+  align-items: center;
+  margin: auto;
+  background-color: rgb(255, 128, 128);
+
+}
+
+nav{
+
+  /*border: 1px solid rgb(rgb(68, 255, 139));*/
+  display: flex;
+  align-items: center;
+  /*justify-content: center;*/
+
+}
+
+.menu{
+
+  display: flex;
+  /*border: 1px solid red;*/
+
+}
+
+.menu li{
+
+  margin-right: 20px;
+  list-style: none;
+  font-size: 20px;
+  text-transform: uppercase;
+
+}
+
+.menu li a{
+
+  text-decoration: none;
+  color: black;
+
+}
+
+.menu li button{
+
+  background-color: red;
+  border: none;
+  padding: 7px 8px;
+  color: white;
+  font-size: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+
+}
+
+.menu li button:hover{
+
+  background-color: darkred;
+  text-transform: uppercase;
+
+}
+
+.slider{
+
+    position: relative;
+    width: inherit;
+
+}
+
+.Mars{
+
+ width: 100%;
+}
+
+.Kawa{
+
+    position: absolute;
+    top: 40%; 
+    left: 43%; 
+    width: 12,5%;
+    
+}
+
+.h1{
+    position: absolute;
+    top: 30%; 
+    left: 25%; 
+    color: rgb(0, 255, 34);
+    font-size: 30px;
+
+}
+
+
+.Zamówic{
+
+  background-color: red;
+  border: none;
+  padding: 17px 18px;
+  color: white;
+  font-size: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  position: absolute;
+  top: 75%;
+  left: 48%;
+
+}
+
+.Zamówic:hover{
+
+  background-color: darkred;
+  text-transform: uppercase;
+
+}
+
+.h12{
+    position: absolute;
+    top: 35%; 
+    left: 35%; 
+    color: rgb(0, 255, 34);
+    font-size: 30px;
+
+}
+
+p{
+
+font-size: 30px;
+color: aliceblue;
+
+}
