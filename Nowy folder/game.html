@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Minecraft – Drewniane Crafty</title>
+  <style>
+    body { margin:0; background:#87CEEB; font-family:sans-serif; }
+    #game {
+      position:relative; width:800px; height:480px;
+      margin:20px auto; border:2px solid #333;
+      overflow:hidden; background:#87CEEB;
+    }
+    #world {
+      position:absolute; width:2000px; height:480px;
+      background:linear-gradient(#87CEEB 60%, #76b3e7);
+    }
+    .block {
+      position:absolute; width:40px; height:40px;
+      background:#654321; transition:opacity 0.2s;
+    }
+    .wood { background:saddlebrown; }
+    .stone { background:gray; }
+    .leaves { background:green; opacity:0.8; }
+    .plank { background:peru; }
+    .table { background:#deb887; border:2px solid #333; }
+    #player {
+      position:absolute; width:36px; height:36px;
+      background:#2ecc71; border:2px solid #1f8f52;
+      box-sizing:border-box;
+    }
+    #hud {
+      width:800px; margin:8px auto;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    #inventory { display:flex; gap:6px; }
+    .slot {
+      width:50px; height:50px; border:2px solid #333;
+      background:#eee; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; cursor:pointer;
+      position:relative;
+    }
+    .slot span {
+      position:absolute; bottom:2px; right:4px;
+      font-size:12px; font-weight:bold; color:#000;
+    }
+    .selected { border-color:#e74c3c; }
+    #openCraft { padding:6px 12px; border:1px solid #333; cursor:pointer; background:#ddd; }
+    #craftingUI {
+      display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:#ccc; padding:20px; border:2px solid #333;
+    }
+    #grid {
+      display:grid; grid-template-columns:repeat(3,50px); gap:4px; margin-bottom:10px;
+    }
+    .cell {
+      width:50px; height:50px; border:1px solid #333;
+      background:#eee; display:flex; align-items:center; justify-content:center;
+      font-size:20px; cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="world">
+      <div id="player"></div>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div id="inventory">
+      <div class="slot selected" data-type="dirt">🟫<span>20</span></div>
+      <div class="slot" data-type="stone">⬜<span>10</span></div>
+      <div class="slot" data-type="wood">🟤<span>5</span></div>
+      <div class="slot" data-type="plank">🟨<span>0</span></div>
+      <div class="slot" data-type="stick">🪵<span>0</span></div>
+      <div class="slot" data-type="table">🟪<span>0</span></div>
+    </div>
+    <button id="openCraft">Otwórz crafting</button>
+  </div>
+
+  <!-- Okno craftingu -->
+  <div id="craftingUI">
+    <h3>Crafting 3×3</h3>
+    <div id="grid">
+      <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+      <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    </div>
+    <button id="doCraft">Craft</button>
+    <button id="closeCraft">Zamknij</button>
+  </div>
+
+  <script>
+    const game=document.getElementById("game");
+    const world=document.getElementById("world");
+    const player=document.getElementById("player");
+    const slots=document.querySelectorAll(".slot");
+    const openCraft=document.getElementById("openCraft");
+    const craftingUI=document.getElementById("craftingUI");
+    const closeCraft=document.getElementById("closeCraft");
+    const doCraft=document.getElementById("doCraft");
+    const cells=document.querySelectorAll(".cell");
+
+    const TILE=40, WORLD_W=2000, WORLD_H=480;
+    let posX=100,posY=80,velY=0,onGround=false;
+    const gravity=-0.7,jumpPower=12,speed=3;
+    let keys={},blocks=[];
+
+    // Inwentarz
+    const inventory={ dirt:20, stone:10, wood:5, plank:0, stick:0, table:0 };
+    function updateInventoryUI(){
+      slots.forEach(slot=>{
+        const type=slot.dataset.type;
+        slot.querySelector("span").textContent=inventory[type]||0;
+      });
+    }
+
+    // Dodawanie bloku
+    function addBlock(x,y,type="dirt"){
+      const b=document.createElement("div");
+      b.className="block "+type;
+      b.style.left=x+"px"; b.style.bottom=y+"px";
+      b.dataset.type=type;
+      world.appendChild(b); blocks.push(b);
+    }
+
+    // Podłoże
+    for(let i=0;i<WORLD_W/TILE;i++) addBlock(i*TILE,0,"dirt");
+
+    // Drzewa
+    function addTree(baseX){
+      for(let h=1;h<=3;h++) addBlock(baseX,h*TILE,"wood");
+      for(let dx=-1;dx<=1;dx++){
+        for(let dy=3;dy<=4;dy++) addBlock(baseX+dx*TILE,dy*TILE,"leaves");
+      }
+    }
+    addTree(200); addTree(600); addTree(1000);
+
+    // Sterowanie
+    document.addEventListener("keydown",e=>keys[e.code]=true);
+    document.addEventListener("keyup",e=>keys[e.code]=false);
+
+    function rect(el){const r=el.getBoundingClientRect();const g=world.getBoundingClientRect();
+      return {left:r.left-g.left,right:r.right-g.left,bottom:g.bottom-r.bottom,top:g.bottom-r.top,width:r.width,height:r.height};}
+    function overlaps(a,b){return !(a.left>=b.right||a.right<=b.left||a.top<=b.bottom||a.bottom>=b.top);}
+    function playerRectAt(nx=posX,ny=posY){return {left:nx,right:nx+36,bottom:ny,top:ny+36,width:36,height:36};}
+    function blockAt(x,y){return blocks.find(b=>{const br=rect(b);return br.left===x&&br.bottom===y;});}
+    function isOnGround(nx=posX,ny=posY){const pr=playerRectAt(nx,ny-1);return blocks.some(b=>overlaps(pr,rect(b)));}
+    function moveHorizontal(dx){const step=Math.sign(dx);for(let i=0;i<Math.abs(dx);i++){const nextX=posX+step;const pr=playerRectAt(nextX,posY);if(blocks.some(b=>overlaps(pr,rect(b)))) return;posX=nextX;}}
+    function moveVertical(dy){const step=Math.sign(dy);for(let i=0;i<Math.abs(dy);i++){const nextY=posY+step;const pr=playerRectAt(posX,nextY);if(blocks.some(b=>overlaps(pr,rect(b)))){if(step<0) onGround=true;velY=0;return;}posY=nextY;}}
+
+    function loop(){
+      let dx=0;
+      if(keys["ArrowRight"]||keys["KeyD"]) dx=speed;
+      if(keys["ArrowLeft"]||keys["KeyA"]) dx=-speed;
+      moveHorizontal(dx);
+      if((keys["Space"]||keys["KeyW"]||keys["ArrowUp"])&&onGround){velY=jumpPower;onGround=false;}
+      velY+=gravity; moveVertical(velY);
+      player.style.left=posX+"px"; player.style.bottom=posY+"px";
+      const centerX=posX-game.clientWidth/2+18;
+            const clampX = Math.max(0, Math.min(centerX, WORLD_W - game.clientWidth));
+      world.style.transform = `translateX(${-clampX}px)`;
+
+      requestAnimationFrame(loop);
+    }
+    loop();
+
+    // --- Ekwipunek wybór ---
+    slots.forEach(slot=>{
+      slot.addEventListener("click",()=>{
+        slots.forEach(s=>s.classList.remove("selected"));
+        slot.classList.add("selected");
+      });
+    });
+
+    function screenToGrid(e){
+      const rectGame=game.getBoundingClientRect();
+      const offsetX = -parseInt(world.style.transform?.match(/-?\d+/)?.[0]||0);
+      const x=Math.floor((e.clientX-rectGame.left+offsetX)/TILE)*TILE;
+      const y=Math.floor((rectGame.bottom-e.clientY)/TILE)*TILE;
+      return {x,y};
+    }
+
+    // --- Stawianie bloków (LPM) ---
+    game.addEventListener("click",e=>{
+      const {x,y}=screenToGrid(e);
+      const selected=document.querySelector(".slot.selected");
+      const type=selected?selected.dataset.type:"dirt";
+      if(inventory[type]<=0) return;
+
+      const pr=playerRectAt(posX,posY);
+      const fake={left:x,right:x+TILE,bottom:y,top:y+TILE};
+      if(overlaps(pr,fake)) return;
+
+      const neighbors=[blockAt(x,y-TILE),blockAt(x,y+TILE),blockAt(x-TILE,y),blockAt(x+TILE,y)];
+      if(!neighbors.some(n=>n)) return;
+
+      if(!blockAt(x,y)){
+        addBlock(x,y,type);
+        inventory[type]--; updateInventoryUI();
+      }
+    });
+
+    // --- Niszczenie bloków (PPM) ---
+    game.addEventListener("contextmenu",e=>{
+      e.preventDefault();
+      const {x,y}=screenToGrid(e);
+      const b=blockAt(x,y);
+      if(b){
+        const type=b.dataset.type;
+        b.style.opacity="0";
+        setTimeout(()=>{
+          b.remove();
+          blocks.splice(blocks.indexOf(b),1);
+          if(type!=="leaves"){
+            inventory[type]=(inventory[type]||0)+1;
+            updateInventoryUI();
+          }
+        },200);
+      }
+    });
+
+    // --- Crafting ---
+    let selectedType=null;
+    slots.forEach(slot=>{
+      slot.addEventListener("click",()=>{
+        slots.forEach(s=>s.classList.remove("selected"));
+        slot.classList.add("selected");
+        selectedType=slot.dataset.type;
+      });
+    });
+
+    cells.forEach(cell=>{
+      cell.addEventListener("click",()=>{
+        if(selectedType && inventory[selectedType]>0){
+          cell.textContent=selectedType[0].toUpperCase();
+          cell.dataset.type=selectedType;
+        }
+      });
+    });
+
+    openCraft.addEventListener("click",()=>craftingUI.style.display="block");
+    closeCraft.addEventListener("click",()=>craftingUI.style.display="none");
+
+    // --- Receptury drewniane ---
+    function checkRecipe(){
+      const g = Array.from(cells).map(c=>c.dataset.type||null);
+
+      // 1 drewno -> 4 deski
+      if(g.filter(x=>x==="wood").length===1){
+        inventory.wood--; inventory.plank+=4;
+        return "Zrobiono 4 deski!";
+      }
+
+      // 2 deski pionowo -> 4 patyki
+      const stickPatterns = [
+        [1,4],[4,7],[0,3],[3,6],[2,5],[5,8]
+      ];
+      for(const [a,b] of stickPatterns){
+        if(g[a]==="plank" && g[b]==="plank"){
+          inventory.plank-=2; inventory.stick+=4;
+          return "Zrobiono 4 patyki!";
+        }
+      }
+
+      // 4 deski w kwadrat -> crafting table
+      if(g[0]==="plank" && g[1]==="plank" && g[3]==="plank" && g[4]==="plank"){
+        inventory.plank-=4; inventory.table++;
+        return "Zrobiono Crafting Table!";
+      }
+
+      // Drewniany miecz
+      if(g[1]==="plank" && g[4]==="plank" && g[7]==="stick"){
+        inventory.plank-=2; inventory.stick--; 
+        return "Zrobiono Drewniany Miecz!";
+      }
+
+      // Drewniana łopata
+      if(g[1]==="plank" && g[4]==="stick" && g[7]==="stick"){
+        inventory.plank--; inventory.stick-=2;
+        return "Zrobiono Drewnianą Łopatę!";
+      }
+
+      // Drewniany kilof
+      if(g[0]==="plank" && g[1]==="plank" && g[2]==="plank" && g[4]==="stick" && g[7]==="stick"){
+        inventory.plank-=3; inventory.stick-=2;
+        return "Zrobiono Drewniany Kilof!";
+      }
+
+      // Drewniana siekiera
+      if(g[0]==="plank" && g[1]==="plank" && g[3]==="plank" && g[4]==="stick" && g[7]==="stick"){
+        inventory.plank-=3; inventory.stick-=2;
+        return "Zrobiono Drewnianą Siekierę!";
+      }
+
+      // Drewniana motyka
+      if(g[0]==="plank" && g[1]==="plank" && g[4]==="stick" && g[7]==="stick"){
+        inventory.plank-=2; inventory.stick-=2;
+        return "Zrobiono Drewnianą Motykę!";
+      }
+
+      // Deski -> drzwi (6 desek w dwóch kolumnach)
+      if(g[0]==="plank" && g[3]==="plank" && g[6]==="plank" &&
+         g[1]==="plank" && g[4]==="plank" && g[7]==="plank"){
+        inventory.plank-=6;
+        return "Zrobiono 3 Drewniane Drzwi!";
+      }
+
+      // Deski -> schody (6 w kształcie L)
+      if(g[0]==="plank" && g[3]==="plank" && g[6]==="plank" &&
+         g[4]==="plank" && g[7]==="plank" && g[8]==="plank"){
+        inventory.plank-=6;
+        return "Zrobiono 4 Schody!";
+      }
+
+      // Deski -> slab (3 w linii)
+      if(g[6]==="plank" && g[7]==="plank" && g[8]==="plank"){
+        inventory.plank-=3;
+        return "Zrobiono 6 Płyt!";
+      }
+
+      // Patyki + deski -> płot
+      if(g[0]==="plank" && g[2]==="plank" && g[3]==="stick" && g[5]==="stick" && g[6]==="plank" && g[8]==="plank"){
+        inventory.plank-=4; inventory.stick-=2;
+        return "Zrobiono 3 Płoty!";
+      }
+
+      // Patyki + deski -> bramka
+      if(g[0]==="stick" && g[2]==="stick" && g[3]==="plank" && g[5]==="plank" && g[6]==="stick" && g[8]==="stick"){
+        inventory.plank-=2; inventory.stick-=4;
+        return "Zrobiono Bramkę!";
+      }
+
+      // Patyki -> drabina (7 w H)
+      if(g[0]==="stick" && g[2]==="stick" && g[3]==="stick" && g[4]==="stick" && g[5]==="stick" && g[6]==="stick" && g[8]==="stick"){
+        inventory.stick-=7;
+        return "Zrobiono 3 Drabiny!";
+      }
+
+      // Deski -> łódka (U shape)
+      if(g[0]==="plank" && g[2]==="plank" && g[3]==="plank" && g[5]==="plank" && g[6]==="plank"){
+        inventory.plank-=5;
+        return "Zrobiono Łódkę!";
+      }
+
+      // Tabliczki (6 desek + 1 patyk)
+      if(g[0]==="plank" && g[1]==="plank" && g[2]==="plank" &&
+         g[3]==="plank" && g[4]==="plank" && g[5]==="plank" &&
+         g[7]==="stick"){
+        inventory.plank-=6; inventory.stick--;
+        return "Zrobiono 3 Tabliczki!";
+      }
+
+      // Przycisk (1 deska)
+      if(g.filter(x=>x==="plank").length===1){
+        inventory.plank--;
+        return "Zrobiono Przycisk!";
+      }
+
+      // Płyta naciskowa (2 deski poziomo)
+      if(g[6]==="plank" && g[7]==="plank"){
+        inventory.plank-=2;
+        return "Zrobiono Płytę Naciskową!";
+      }
+
+      return "Brak przepisu";
+    }
+
+    doCraft.addEventListener("click",()=>{
+      const msg=checkRecipe();
+      alert(msg);
+      updateInventoryUI();
+      cells.forEach(c=>{c.textContent=""; delete c.dataset.type;});
+    });
+
+    updateInventoryUI();
+  </script>
+</body>
+</html>

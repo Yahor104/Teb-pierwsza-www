@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Mini Edytor HTML/CSS/JS</title>
+  <style>
+    body { margin:0; font-family:"Segoe UI",sans-serif; background:#1e1e1e; color:#f0f0f0; display:flex; flex-direction:column; height:100vh; }
+    header { background:#2d2d2d; padding:15px 20px; font-size:18px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; }
+    header .buttons { display:flex; gap:10px; }
+    main { display:flex; flex:1; overflow:hidden; }
+    .editor { flex:1; display:flex; flex-direction:column; padding:10px; background:#252526; border-right:1px solid #333; }
+    .editor h2 { margin:0 0 5px; font-size:14px; color:#9cdcfe; }
+    textarea { flex:1; background:#1e1e1e; color:#d4d4d4; border:1px solid #333; border-radius:5px; padding:10px; font-family:monospace; font-size:14px; resize:none; outline:none; }
+    .preview { flex:1.5; display:flex; flex-direction:column; background:#1e1e1e; }
+    .preview header { background:#2d2d2d; padding:10px; font-size:14px; color:#9cdcfe; display:flex; justify-content:space-between; align-items:center; }
+    iframe { flex:1; border:none; background:white; }
+    button { background:#007acc; color:white; border:none; padding:8px 15px; border-radius:5px; font-size:14px; cursor:pointer; transition:background 0.3s; }
+    button:hover { background:#005a9e; }
+    input { padding:5px; border-radius:5px; border:1px solid #333; background:#1e1e1e; color:#fff; }
+  </style>
+</head>
+<body>
+  <header>
+    ✨ Mini Edytor
+    <div class="buttons">
+      <input type="text" id="projectName" placeholder="Nazwa projektu">
+      <button onclick="saveCode()">💾 Zapisz</button>
+      <button onclick="goHome()">⬅ Wróć</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="editor">
+      <h2>HTML</h2>
+      <textarea id="html"><h1>Hello World</h1></textarea>
+    </div>
+    <div class="editor">
+      <h2>CSS</h2>
+      <textarea id="css">h1 { color: crimson; text-align: center; }</textarea>
+    </div>
+    <div class="editor">
+      <h2>JS</h2>
+      <textarea id="js">console.log("Działa!");</textarea>
+      <button onclick="run()">▶ Uruchom</button>
+    </div>
+    <div class="preview">
+      <header>
+        Podgląd
+        <button onclick="goFullscreen()">⛶ Pełny ekran</button>
+      </header>
+      <iframe id="output"></iframe>
+    </div>
+  </main>
+
+  <script>
+    function run() {
+      const html = document.getElementById("html").value;
+      const css = "<style>" + document.getElementById("css").value + "</style>";
+      const js = "<script>" + document.getElementById("js").value + "<\/script>";
+      const code = html + css + js;
+      document.getElementById("output").srcdoc = code;
+    }
+
+    function goFullscreen() {
+      const iframe = document.getElementById("output");
+      if (iframe.requestFullscreen) iframe.requestFullscreen();
+      else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+      else if (iframe.msRequestFullscreen) iframe.msRequestFullscreen();
+    }
+
+    function saveCode() {
+      const name = document.getElementById("projectName").value.trim();
+      if (!name) { alert("Podaj nazwę projektu!"); return; }
+
+      const data = {
+        html: document.getElementById("html").value,
+        css: document.getElementById("css").value,
+        js: document.getElementById("js").value
+      };
+
+      let projects = JSON.parse(localStorage.getItem("projects") || "[]");
+      const existingIndex = projects.findIndex(p => p.name === name);
+
+      if (existingIndex >= 0) {
+        projects[existingIndex].data = data;
+      } else {
+        projects.push({ name, data });
+      }
+
+      localStorage.setItem("projects", JSON.stringify(projects));
+      alert("Projekt zapisany!");
+    }
+
+    function goHome() {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

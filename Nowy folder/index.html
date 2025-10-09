@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Moja Aplikacja</title>
+  <style>
+    body { margin:0; font-family:"Segoe UI",sans-serif; background:linear-gradient(135deg,#007acc,#005a9e); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh; text-align:center; }
+    h1 { font-size:2.5rem; margin-bottom:20px; }
+    p { font-size:1.2rem; margin-bottom:30px; }
+    a, button { background:#ffffff; color:#007acc; text-decoration:none; padding:8px 15px; border-radius:6px; font-size:0.9rem; font-weight:bold; transition:0.3s; border:none; cursor:pointer; margin:3px; }
+    a:hover, button:hover { background:#f0f0f0; transform:scale(1.05); }
+    .projects { margin-top:20px; background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; width:320px; }
+    .project-item { display:flex; justify-content:space-between; align-items:center; margin:5px 0; }
+    .project-item span { flex:1; text-align:left; }
+    footer { margin-top:30px; font-size:0.9rem; opacity:0.8; }
+  </style>
+</head>
+<body>
+  <h1>✨ Witaj w mojej aplikacji</h1>
+  <p>Wybierz, co chcesz zrobić:</p>
+  <a href="editor.html">➕ Nowy projekt</a>
+
+  <div class="projects" id="projectsList">
+    <h2>📂 Zapisane projekty</h2>
+    <div id="list"></div>
+  </div>
+
+  <footer>© 2025 Moja Aplikacja</footer>
+
+  <script>
+    function loadProjects() {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      const projects = JSON.parse(localStorage.getItem("projects") || "[]");
+
+      if (projects.length === 0) {
+        list.innerHTML = "<p>Brak zapisanych projektów</p>";
+        return;
+      }
+
+      projects.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.className = "project-item";
+        div.innerHTML = `
+          <span>${p.name}</span>
+          <div>
+            <button onclick="openProject(${index})">Otwórz</button>
+            <button onclick="deleteProject(${index})" style="background:#ff4d4d; color:white;">Usuń</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function openProject(index) {
+      localStorage.setItem("currentProjectIndex", index);
+      window.location.href = "editor.html";
+    }
+
+    function deleteProject(index) {
+      if (confirm("Na pewno chcesz usunąć ten projekt?")) {
+        let projects = JSON.parse(localStorage.getItem("projects") || "[]");
+        projects.splice(index, 1);
+        localStorage.setItem("projects", JSON.stringify(projects));
+        loadProjects();
+      }
+    }
+
+    loadProjects();
+  </script>
+</body>
+</html>
