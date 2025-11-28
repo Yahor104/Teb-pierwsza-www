@@ -1,0 +1,266 @@
+body {
+    background-color: rgb(212, 255, 209); /* Tło strony w jasnej zieleni */
+    margin: 0; /* Usunięcie domyślnego marginesu przeglądarki */
+    font-family: Arial, sans-serif; /* Czcionka Arial, zapasowa sans-serif */
+}
+
+nav {
+    background-color: #76b36a; /* Tło paska nawigacyjnego */
+    position: fixed; /* Pasek przyklejony do góry strony */
+    top: 0; /* Przyklejony do górnej krawędzi */
+    width: 100%; /* Pasek zajmuje całą szerokość ekranu */
+    display: flex; /* Flexbox dla elementów wewnątrz */
+    justify-content: center; /* Wyśrodkowanie elementów w poziomie */
+    z-index: 10; /* Pasek nad innymi elementami strony */
+}
+
+nav ul {
+    list-style: none; /* Usunięcie kropek z listy */
+    display: flex; /* Elementy listy obok siebie */
+    margin: 0; /* Brak marginesu */
+    padding: 0; /* Brak wcięcia */
+}
+
+nav ul li a {
+    display: block; /* Link jako blok, łatwiej kliknąć */
+    padding: 14px 20px; /* Wewnętrzny odstęp linku */
+    color: white; /* Kolor tekstu */
+    text-decoration: none; /* Usunięcie podkreślenia */
+    font-weight: bold; /* Pogrubienie tekstu */
+    text-align: center; /* Wyśrodkowanie tekstu w linku */
+}
+
+nav ul li a:hover {
+    background-color: #a15a5a; /* Zmiana tła przy najechaniu myszką */
+    border-radius: 8px; /* Zaokrąglone rogi przy hover */
+}
+
+.hero {
+    margin-top: 70px; /* Odstęp od góry, żeby nie zasłaniało przez fixed nav */
+}
+
+.obr {
+    width: 100%; /* Obraz zajmuje całą szerokość */
+    height: auto;  /* Zachowanie proporcji obrazu */
+    display: block; /* Usunięcie przerwy pod obrazem */
+}
+
+.tekst {
+    font-size: 22px; /* Wielkość tekstu */
+    max-width: 800px; /* Maksymalna szerokość bloku */
+    margin: 40px auto; /* Odstęp od góry/dol i wyśrodkowanie */
+}
+
+.container {
+    display: flex; /* Flexbox dla dzieci */
+    justify-content: center; /* Wyśrodkowanie w poziomie */
+    gap: 10px; /* Odstęp między elementami */
+    margin: 30px 0; /* Odstęp pionowy sekcji */
+    flex-wrap: wrap; /* Zawijanie elementów przy braku miejsca */
+}
+
+.square {
+    width: 350px; /* Szerokość bloku */
+    min-height: 250px; /* Minimalna wysokość */
+    background: linear-gradient(135deg, #76b36a, #4CAF50); /* Gradient tła */
+    color: white; /* Kolor tekstu */
+    padding: 20px; /* Wewnętrzny odstęp */
+    display: flex; /* Flexbox wewnątrz */
+    flex-direction: column; /* Ułożenie tekstu w kolumnie */
+    justify-content: center; /* Wyśrodkowanie w pionie */
+    align-items: center; /* Wyśrodkowanie w poziomie */
+    text-align: center; /* Wyśrodkowanie tekstu */
+    font-size: 18px; /* Rozmiar tekstu */
+    border-radius: 12px; /* Zaokrąglone rogi */
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2); /* Cień pod blokiem */
+    transition: transform 0.3s, box-shadow 0.3s; /* Animacja przy hover */
+}
+
+.square:hover {
+    transform: translateY(-5px); /* Podniesienie bloku przy hover */
+    box-shadow: 0 12px 25px rgba(0,0,0,0.3); /* Mocniejszy cień przy hover */
+}
+
+.square strong {
+    font-size: 22px; /* Rozmiar nagłówka w bloku */
+    margin-bottom: 12px; /* Odstęp pod nagłówkiem */
+    display: block; /* Wyświetlenie jako blok */
+}
+
+.square .sub {
+    display: block; /* Blok tekstu pod nagłówkiem */
+    font-weight: normal; /* Normalna grubość tekstu */
+    margin-top: 5px; /* Odstęp od góry */
+    font-size: 16px; /* Rozmiar tekstu */
+    line-height: 1.5; /* Odstęp między liniami */
+}
+
+.square .btn-card {
+    margin-top: 15px; /* Odstęp od góry */
+    display: inline-block; /* Przyciski w jednej linii */
+    background-color: #ffe600; /* Kolor tła przycisku */
+    color: #4CAF50; /* Kolor tekstu przycisku */
+    padding: 10px 20px; /* Wewnętrzny odstęp */
+    border-radius: 8px; /* Zaokrąglone rogi przycisku */
+    text-decoration: none; /* Bez podkreślenia */
+    font-weight: bold; /* Pogrubienie tekstu */
+    transition: background-color 0.3s, transform 0.3s; /* Animacja przy hover */
+}
+
+.square .btn-card:hover {
+    background-color: #ffcc00; /* Zmiana tła przy hover */
+    transform: scale(1.05); /* Lekka powiększenie przy hover */
+}
+
+.link {
+    display: block; /* Link jako blok */
+    padding: 14px 20px; /* Wewnętrzny odstęp */
+    color: white; /* Kolor tekstu */
+    text-decoration: none; /* Bez podkreślenia */
+    text-align: center; /* Wyśrodkowanie tekstu */
+}
+
+.link:hover {
+    background-color: #427548; /* Tło przy hover */
+    border-radius: 8px; /* Zaokrąglone rogi przy hover */
+}
+
+.square strong {
+    font-size: 20px; /* Nagłówek w bloku square */
+    margin-bottom: 8px; /* Odstęp od tekstu poniżej */
+    display: block; /* Wyświetlenie jako blok */
+}
+
+.square .sub {
+    display: block; /* Tekst opisowy pod nagłówkiem */
+    font-weight: normal; /* Normalna grubość tekstu */
+    margin-top: 5px; /* Odstęp od góry */
+}
+
+.container {
+    display: flex; /* Flexbox dla kart */
+    justify-content: center; /* Wyśrodkowanie kart */
+    gap: 20px; /* Odstęp między kartami */
+    margin: 40px 0; /* Odstęp pionowy */
+    flex-wrap: wrap; /* Zawijanie kart w mniejszych ekranach */
+}
+
+.card {
+    width: 350px; /* Szerokość karty */
+    background: white; /* Tło karty */
+    border-radius: 12px; /* Zaokrąglone rogi */
+    overflow: hidden; /* Przycinanie treści wychodzącej poza kartę */
+    text-decoration: none; /* Bez podkreślenia linku */
+    color: black; /* Kolor tekstu */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Lekki cień */
+    transition: transform 0.2s, box-shadow 0.2s; /* Animacja przy hover */
+}
+
+.card:hover {
+    transform: translateY(-5px); /* Podniesienie karty przy hover */
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25); /* Mocniejszy cień */
+}
+
+.card-img {
+    width: 100%; /* Obraz w pełnej szerokości karty */
+    height: 300px;   /* Stała wysokość obrazu */
+    object-fit: cover; /* Przycięcie obrazu bez deformacji */
+}
+
+.card-text {
+    padding: 15px; /* Wewnętrzny odstęp tekstu */
+    background-color: #4CAF50; /* Zielone tło tekstu */
+    color: white; /* Kolor tekstu */
+}
+
+.card-text strong {
+    display: block; /* Nagłówek jako blok */
+    font-size: 20px; /* Rozmiar nagłówka */
+    margin-bottom: 6px; /* Odstęp od opisu */
+}
+
+.card-text span {
+    font-size: 16px; /* Rozmiar opisu */
+    display: block; /* Wyświetlenie jako blok */
+}
+
+.footer {
+    background-color: #4CAF50; /* Zielone tło stopki */
+    color: white; /* Kolor tekstu w stopce */
+    padding: 40px 20px; /* Odstęp wewnętrzny stopki */
+    text-align: center; /* Wyśrodkowanie tekstu */
+}
+
+.footer-content h2 {
+    margin-bottom: 10px; /* Odstęp pod nagłówkiem stopki */
+}
+
+.footer-links {
+    margin: 20px 0; /* Odstęp pionowy między linkami */
+}
+
+.footer-links a {
+    color: white; /* Kolor linków */
+    text-decoration: none; /* Bez podkreślenia */
+    margin: 0 10px; /* Odstęp między linkami */
+    transition: color 0.3s; /* Animacja zmiany koloru */
+}
+
+.footer-links a:hover {
+    color: #ffe600; /* Kolor linku przy hover */
+}
+
+.footer-newsletter {
+    margin: 20px 0; /* Odstęp pionowy formularza */
+}
+
+.footer-newsletter input {
+    padding: 8px; /* Wewnętrzny odstęp pola input */
+    width: 200px; /* Szerokość pola email */
+    border-radius: 5px 0 0 5px; /* Zaokrąglone rogi po lewej */
+    border: none; /* Brak obramowania */
+}
+
+.footer-newsletter button {
+    padding: 9px 15px; /* Wewnętrzny odstęp przycisku */
+    border: none; /* Brak obramowania */
+    border-radius: 0 5px 5px 0; /* Zaokrąglone rogi po prawej */
+    background-color: #ffe600; /* Żółte tło przycisku */
+    cursor: pointer; /* Zmiana kursora na rękę */
+    transition: background-color 0.3s, transform 0.3s; /* Animacja hover */
+}
+
+.footer-newsletter button:hover {
+    background-color: #ffcc00; /* Zmiana koloru tła przy hover */
+    transform: scale(1.05); /* Lekka animacja powiększenia */
+}
+
+.footer-social a {
+    margin: 0 10px; /* Odstęp między ikonami social */
+    display: inline-block; /* Wyświetlenie w jednej linii */
+    transition: transform 0.3s; /* Animacja przy hover */
+}
+
+.footer-social a:hover {
+    transform: scale(1.2); /* Powiększenie ikony przy hover */
+}
+
+.btn {
+    display: inline-block; /* Przyciski inline */
+    padding: 12px 25px; /* Wewnętrzny odstęp */
+    background-color: #76b36a; /* Zielone tło przycisku */
+    color: white; /* Kolor tekstu przycisku */
+    text-decoration: none; /* Bez podkreślenia */
+    border-radius: 5px; /* Zaokrąglone rogi */
+    transition: background-color 0.3s, transform 0.3s; /* Animacja hover */
+}
+
+.btn:hover {
+    background-color: #5c8c55; /* Ciemniejsze tło przy hover */
+    transform: translateY(-3px); /* Lekki efekt unoszenia przy hover */
+}
+
+.card:hover {
+    transform: translateY(-5px); /* Powtórzenie efektu hover dla kart */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3); /* Mocniejszy cień przy hover */
+}
