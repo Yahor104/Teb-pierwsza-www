@@ -4,30 +4,40 @@ import copy
 import sys
 
 pygame.init()
-WIDTH, HEIGHT = 200, 100
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+WIDTH, HEIGHT = 400, 100   # внутренняя логика
+SCALE = 4  # во сколько раз увеличиваем экран
+
+screen = pygame.display.set_mode((WIDTH*SCALE, HEIGHT*SCALE))
+pygame.display.set_caption("Цикличный мир с деревьями")
+
+surface = pygame.Surface((WIDTH, HEIGHT))  # рисуем всё на маленьком surface
+
 pygame.display.set_caption("Цикличный мир с деревьями")
 clock = pygame.time.Clock()
 
 # Количество семян
-a = 10
+a = 600
 
+generation = 0
 alive_trees = []
 trees = []
 seeds = []
 new_seeds = []
 occupied = set()
+paused = False  # состояние паузы
+
 
 # Нижние блоки
 for x in range(WIDTH):
-    occupied.add((x, HEIGHT - 1))
+    occupied.add((x, HEIGHT-1))
 
 # Создание начальных семян
 for i in range(a):
     seed = {
         "x": random.randint(0, WIDTH - 1),
         "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
-        "energy": 60,
+        "energy": 3000,
+        "max_age" : 70,
         "genom": []
     }
     seeds.append(seed)
@@ -43,14 +53,91 @@ for seed in seeds:
         }
         seed["genom"].append(gen)
 
+def restart_simulation():
+    global trees, seeds, alive_trees, new_seeds, occupied, generation, paused
+
+    # Сброс состояния
+    trees = []
+    seeds = []
+    alive_trees = []
+    new_seeds = []
+    occupied = set()
+    paused = False
+    generation = 0
+
+    # Нижний блок земли
+    for x in range(WIDTH):
+        occupied.add((x, HEIGHT - 1))
+
+    # Создание новых семян чуть выше земли
+    for _ in range(a):
+        seed = {
+            "x": random.randint(0, WIDTH - 1),
+            "y": HEIGHT - 3,  # чуть выше нижнего блока
+            "energy": 1000,
+            "max_age": 70,
+            "genom": []
+        }
+
+        # Геном семян
+        for _ in range(15):
+            gene = {
+                "UP": random.randint(0, 29),
+                "DOWN": random.randint(0, 29),
+                "LEFT": random.randint(0, 29),
+                "RIGHT": random.randint(0, 29)
+            }
+            seed["genom"].append(gene)
+
+        seeds.append(seed)
+
+    # Очистка экрана
+    surface.fill((0, 0, 0))
+
+    print("Симуляция перезапущена! 🌱")
+
+
+
 while True:
     # Обработка событий
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                paused = not paused  # переключаем паузу
+            elif event.key == pygame.K_r:
+                restart_simulation()  # перезапуск
 
-    screen.fill((0, 0, 0))
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mx, my = event.pos
+            mx //= SCALE  # приведение к логическим координатам
+            my //= SCALE
+            for tree in trees:
+                for seg in tree["segments"]:
+                    if seg["x"] == mx and seg["y"] == my:
+                        print("\nTREE GENOM")
+                        for i, gene in enumerate(tree["genom"]):
+                            print(
+                                f"{i:02d}: "
+                                f"UP={gene['UP']:2d} "
+                                f"DOWN={gene['DOWN']:2d} "
+                                f"LEFT={gene['LEFT']:2d} "
+                                f"RIGHT={gene['RIGHT']:2d}"
+                            )
+                        print("-" * 40)
+                        print("Energy:", tree["energy"])
+                        print("max_age:", tree["max_age"])
+                        break
+
+    if paused:
+        pygame.display.flip()
+        clock.tick(60)
+        continue  # пропускаем рост деревьев и семян
+
+    surface.fill((0, 0, 0))  # очистка
 
     # Рост деревьев
     alive_trees = []
@@ -59,29 +146,21 @@ while True:
         for segment in tree["segments"]:
             tree["energy"] -= 10
             if segment["wood"]:
-                base = HEIGHT - segment["y"]   # 1,2,3,4,5...
+                base = HEIGHT - segment["y"]
+
+
+                # проверяем только сегменты сверху
                 multiplier = 3
-
-                has_block = False
-                has_free = False
-
-                for yy in range(segment["y"] - 1, -1, -1):
+                for yy in range(segment["y"]):
                     if (segment["x"], yy) in occupied:
-                        has_block = True
-                    else:
-                        has_free = True
-
-                if has_block:
-                    multiplier -= 1
-                if has_free:
-                    multiplier += 1
-
-                if multiplier > 3:
-                    multiplier = 3
+                        multiplier -= 1
+                    elif (segment["x"], yy) not in occupied:
+                        multiplier += 1
+                    if multiplier > 3:
+                        multiplier = 3
 
                 tree["energy"] += base * multiplier
                 continue
-
 
 
             segment["wood"] = True
@@ -151,34 +230,39 @@ while True:
                         "x": ds["x"],
                         "y": ds["y"],
                         "energy": en_per_seed,
+                        "max_age" : tree["max_age"],
                         "genom": copy.deepcopy(tree["genom"])
                     }
-                    if random.randint(0, 3) == 3:
+                    a = random.randint(0, 3)
+                    if a == 3:
                         gene = new_seed["genom"][random.randint(0, 14)]
                         direction = random.choice(["UP","DOWN","LEFT","RIGHT"])
                         gene[direction] = random.randint(0,29)
+                    elif a == 2:
+                        new_seed["max_age"] += random.randint(-3, 3)
+                    
 
-                    seeds.append(new_seed)  # ✅ только одно семя!
-                    occupied.add((ds["x"], ds["y"]))
+                    seeds.append(new_seed)
+                    # occupied.add((ds["x"], ds["y"]))  # ❌ не нужно
+
 
     trees = alive_trees
 
     # Падение семян и превращение в деревья
     new_seeds = []
     for seed in seeds:
-        seed["x"] = seed["x"] % WIDTH  # цикличность по X
-        if (seed["x"], seed["y"] + 1) not in occupied and seed["y"] != HEIGHT-2:
+        seed["x"] = seed["x"] % WIDTH
+        if (seed["x"], seed["y"] + 1) not in occupied and seed["y"] != HEIGHT-2 and seed["energy"] > 0:
             seed["y"] += 1
             new_seeds.append(seed)
         elif seed["y"] != HEIGHT-2:
             continue
-        else:
-            # Превращаемся в дерево
+        elif seed["energy"] > 0:
             new_tree = {
                 "color": [random.randint(0, 255) for _ in range(3)],
                 "energy": seed["energy"],
                 "genom": copy.deepcopy(seed["genom"]),
-                "max_age": 80,
+                "max_age": seed["max_age"],
                 "age": 0,
                 "segments": [{
                     "x": seed["x"],
@@ -195,12 +279,23 @@ while True:
     for tree in trees:
         for segment in tree["segments"]:
             color = tree["color"] if segment["wood"] else (255, 255, 255)
-            pygame.draw.rect(screen, color, (segment["x"], segment["y"], 1, 1))
+            pygame.draw.rect(surface, color, (segment["x"], segment["y"], 1, 1))
 
     # Рисуем семена
     for seed in seeds:
-        pygame.draw.rect(screen, (255, 255, 255), (seed["x"], seed["y"], 1, 1))
+        pygame.draw.rect(surface, (255, 255, 255), (seed["x"], seed["y"], 1, 1))
 
+    # Нижний блок
+    for x in range(WIDTH):
+        pygame.draw.rect(surface, (200, 200, 0), (x, HEIGHT-1, 1, 1))
+
+    screen.blit(pygame.transform.scale(surface, (WIDTH*SCALE, HEIGHT*SCALE)), (0, 0))
     pygame.display.flip()
-    clock.tick(1)
-    print("Trees:", len(trees))
+    clock.tick(60)
+    world_energy = 0
+    for tree in trees:
+        world_energy += tree["energy"]
+    for seed in seeds:
+        world_energy += seed["energy"]
+    generation += 1
+    print("Trees:", len(trees), "World energy:", int(world_energy), "FPS:", int(clock.get_fps()), "Generation:", generation)
