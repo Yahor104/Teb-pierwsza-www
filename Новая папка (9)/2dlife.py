@@ -16,7 +16,7 @@ pygame.display.set_caption("Цикличный мир с деревьями")
 clock = pygame.time.Clock()
 
 # Количество семян
-a = 600
+a = 1000
 
 generation = 0
 alive_trees = []
@@ -73,7 +73,7 @@ def restart_simulation():
     for _ in range(a):
         seed = {
             "x": random.randint(0, WIDTH - 1),
-            "y": HEIGHT - 3,  # чуть выше нижнего блока
+            "y": random.randint(0, HEIGHT - 2),  # чуть выше нижнего блока
             "energy": 1000,
             "max_age": 70,
             "genom": []
@@ -147,7 +147,7 @@ while True:
             tree["energy"] -= 10
             if segment["wood"]:
                 base = HEIGHT - segment["y"]
-
+                base = base/2
 
                 # проверяем только сегменты сверху
                 multiplier = 3
