@@ -37,7 +37,7 @@ for i in range(a):
         "x": random.randint(0, WIDTH - 1),
         "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
         "energy": 3000,
-        "max_age" : 70,
+        "max_age" : random.randint(10, 100),
         "genom": []
     }
     seeds.append(seed)
@@ -76,7 +76,7 @@ def restart_simulation():
             "y": random.randint(0, HEIGHT - 2),  # чуть выше нижнего блока
             "energy": 1000,
             "max_age": 70,
-            "genom": []
+            "genom": [],
         }
 
         # Геном семян
@@ -147,7 +147,6 @@ while True:
             tree["energy"] -= 10
             if segment["wood"]:
                 base = HEIGHT - segment["y"]
-                base = base/2
 
                 # проверяем только сегменты сверху
                 multiplier = 3
@@ -173,7 +172,8 @@ while True:
                     "x": segment["x"],
                     "y": segment["y"] - 1,
                     "genom_nr": gen["UP"],
-                    "wood": False
+                    "wood": False,
+                    "seed" : False
                 })
                 occupied.add((segment["x"], segment["y"] - 1))
 
@@ -183,7 +183,8 @@ while True:
                     "x": segment["x"],
                     "y": segment["y"] + 1,
                     "genom_nr": gen["DOWN"],
-                    "wood": False
+                    "wood": False,
+                    "seed" : False
                 })
                 occupied.add((segment["x"], segment["y"] + 1))
 
@@ -194,7 +195,8 @@ while True:
                     "x": new_x,
                     "y": segment["y"],
                     "genom_nr": gen["LEFT"],
-                    "wood": False
+                    "wood": False,
+                    "seed" : False
                 })
                 occupied.add((new_x, segment["y"]))
 
@@ -205,9 +207,14 @@ while True:
                     "x": new_x,
                     "y": segment["y"],
                     "genom_nr": gen["RIGHT"],
-                    "wood": False
+                    "wood": False,
+                    "seed" : False
                 })
                 occupied.add((new_x, segment["y"]))
+            if gen["RIGHT"] > 15 and gen["LEFT"] > 15 and gen["UP"] > 15 and gen["DOWN"] > 15:
+                segment["seed"] = True
+            if segment["seed"] == True:
+                segment["wood"] = False
 
         tree["segments"].extend(new_segments)
         tree["age"] += 1
@@ -268,7 +275,8 @@ while True:
                     "x": seed["x"],
                     "y": seed["y"],
                     "genom_nr": 0,
-                    "wood": False
+                    "wood": False,
+                    "seed" : False
                 }]
             }
             trees.append(new_tree)
