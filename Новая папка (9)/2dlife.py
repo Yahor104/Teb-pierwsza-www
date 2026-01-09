@@ -172,21 +172,28 @@ while True:
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            if gen["gen_if"] < 20:
+            elif gen["gen_if"] < 20:
                 if (segment["x"], segment["y"] + 1) in occupied:
                     segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 10
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            if gen["gen_if"] < 30:
+            elif gen["gen_if"] < 30:
                 if (new_x, segment["y"]) in occupied:
                     segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 20
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            if gen["gen_if"] < 40:
+            elif gen["gen_if"] < 40:
                 if (new_x, segment["y"]) in occupied:
                     segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 30
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 50:
+                e = gen["gen_if"] - 40 * 300
+                if tree["energy"] < e:
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 40
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
