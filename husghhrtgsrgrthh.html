@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"> <!-- Ustawienie kodowania znaków na UTF-8 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsywność strony -->
+<title>Kalkulator naukowy z efektami premium</title> <!-- Tytuł strony -->
+
+<style>
+/* Styl dla całego ciała strony */
+body {
+  display: flex; /* Flexbox dla łatwego centrowania */
+  flex-direction: column; /* Elementy ustawione w kolumnie */
+  align-items: center; /* Wyśrodkowanie poziome */
+  background: linear-gradient(135deg, #74ebd5, #ACB6E5); /* Gradient tła */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Czcionka */
+  margin: 0;
+  padding: 20px;
+}
+
+/* Styl dla kontenera kalkulatora */
+.calculator {
+  background-color: #222; /* Ciemne tło */
+  padding: 20px; /* Wewnętrzny odstęp */
+  border-radius: 20px; /* Zaokrąglone rogi */
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5); /* Cień pod kalkulatorem */
+  width: 340px; /* Szerokość kalkulatora */
+  margin-bottom: 20px; /* Odstęp od elementów poniżej */
+}
+
+/* Wyświetlacz kalkulatora */
+.display {
+  background-color: black; /* Tło wyświetlacza */
+  color: lime; /* Kolor tekstu */
+  font-size: 2em; /* Duża czcionka */
+  text-align: right; /* Tekst wyrównany do prawej */
+  padding: 10px; /* Wewnętrzny odstęp */
+  border-radius: 12px; /* Zaokrąglone rogi */
+  margin-bottom: 15px; /* Odstęp od przycisków */
+  overflow-x: auto; /* Przewijanie w poziomie jeśli liczba jest długa */
+  box-shadow: inset 0 4px 8px rgba(0,255,0,0.3); /* Wewnętrzny cień */
+  animation: blink 1s infinite; /* Animacja migania */
+}
+
+/* Animacja migania wyświetlacza */
+@keyframes blink {
+  0%,50%,100% { box-shadow: inset 0 4px 8px rgba(0,255,0,0.3);}
+  25%,75% { box-shadow: inset 0 4px 8px rgba(0,255,0,0.8);}
+}
+
+/* Kontener przycisków kalkulatora */
+.buttons {
+  display: grid; /* Siatka przycisków */
+  grid-template-columns: repeat(5, 1fr); /* 5 kolumn równej szerokości */
+  gap: 10px; /* Odstęp między przyciskami */
+}
+
+/* Styl dla wszystkich przycisków */
+button {
+  padding: 15px; /* Wewnętrzny odstęp */
+  font-size: 1em; /* Rozmiar czcionki */
+  border: none; /* Brak obramowania */
+  border-radius: 12px; /* Zaokrąglone rogi */
+  cursor: pointer; /* Kursor wskazujący */
+  transition: all 0.2s ease; /* Płynna zmiana efektów */
+  box-shadow: 0 4px #111; /* Cień przycisku */
+  color: white; /* Kolor tekstu */
+}
+
+/* Efekt naciśnięcia przycisku */
+button:active {
+  transform: translateY(2px); /* Przesunięcie w dół */
+  box-shadow: 0 2px #111; /* Zmniejszenie cienia */
+}
+
+/* Efekt najechania myszką */
+button:hover {
+  filter: brightness(1.3); /* Rozjaśnienie przycisku */
+}
+
+/* Style dla różnych typów przycisków */
+.btn-number { background: linear-gradient(135deg, #555, #222); } /* cyfry */
+.btn-operator { background: linear-gradient(135deg, #ff9500, #e68900); } /* operatory */
+.btn-clear { background: linear-gradient(135deg, #ff3b30, #cc2a20); grid-column: span 2; } /* przycisk C */
+.btn-equal { background: linear-gradient(135deg, #34c759, #28a745); grid-column: span 2; animation: pulse 2s infinite; } /* przycisk = */
+.btn-func { background: linear-gradient(135deg, #007aff, #005fbb); } /* funkcje trygonometryczne */
+
+/* Animacja pulsowania przycisku "=" */
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Styl dla canvas, czyli wykresu */
+canvas {
+  border-radius: 15px;
+  border: 2px solid #333; /* Obwódka */
+  background-color: #fff; /* Białe tło */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3); /* Cień */
+}
+</style>
+</head>
+<body>
+
+<!-- Kontener kalkulatora -->
+<div class="calculator">
+  <!-- Wyświetlacz -->
+  <div class="display" id="display">0</div>
+
+  <!-- Siatka przycisków -->
+  <div class="buttons">
+    <button class="btn-clear" onclick="clearDisplay()">C</button> <!-- Czyści wyświetlacz -->
+    <button class="btn-func" onclick="calculateTrig('sin')">sin</button> <!-- sin -->
+    <button class="btn-func" onclick="calculateTrig('cos')">cos</button> <!-- cos -->
+    <button class="btn-func" onclick="calculateTrig('tan')">tan</button> <!-- tan -->
+    <button class="btn-func" onclick="calculateTrig('cot')">cot</button> <!-- cot -->
+
+    <button class="btn-number" onclick="appendNumber('7')">7</button> <!-- cyfry -->
+    <button class="btn-number" onclick="appendNumber('8')">8</button>
+    <button class="btn-number" onclick="appendNumber('9')">9</button>
+    <button class="btn-operator" onclick="appendOperator('/')">/</button> <!-- dzielenie -->
+    <button class="btn-operator" onclick="appendOperator('*')">*</button> <!-- mnożenie -->
+
+    <button class="btn-number" onclick="appendNumber('4')">4</button>
+    <button class="btn-number" onclick="appendNumber('5')">5</button>
+    <button class="btn-number" onclick="appendNumber('6')">6</button>
+    <button class="btn-operator" onclick="appendOperator('-')">-</button> <!-- odejmowanie -->
+    <button class="btn-operator" onclick="appendOperator('+')">+</button> <!-- dodawanie -->
+
+    <button class="btn-number" onclick="appendNumber('1')">1</button>
+    <button class="btn-number" onclick="appendNumber('2')">2</button>
+    <button class="btn-number" onclick="appendNumber('3')">3</button>
+    <button class="btn-equal" onclick="calculateResult()">=</button> <!-- oblicz wynik -->
+    <button class="btn-number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+    <button class="btn-number" onclick="appendNumber('.')">.</button> <!-- przecinek dziesiętny -->
+  </div>
+</div>
+
+<!-- Canvas do wykresu funkcji -->
+<canvas id="graph" width="600" height="300"></canvas>
+
+<script>
+// Pobranie elementu wyświetlacza
+let display = document.getElementById('display');
+let currentInput = ''; // Aktualny wpis użytkownika
+
+// Pobranie canvas i kontekstu do rysowania
+const canvas = document.getElementById('graph');
+const ctx = canvas.getContext('2d');
+
+/* Funkcja dodaje cyfrę do wyświetlacza */
+function appendNumber(num) {
+  if (currentInput === '0' && num !== '.') currentInput = num; // zamiana 0 na nową cyfrę
+  else currentInput += num; // dodanie cyfry
+  display.textContent = currentInput;
+}
+
+/* Funkcja dodaje operator do wyświetlacza */
+function appendOperator(op) {
+  if (currentInput === '') return; // brak działania jeśli nic nie wpisano
+  const lastChar = currentInput.slice(-1);
+  if ('+-*/'.includes(lastChar)) currentInput = currentInput.slice(0, -1) + op; // zamiana ostatniego operatora
+  else currentInput += op;
+  display.textContent = currentInput;
+}
+
+/* Funkcja czyszczenia wyświetlacza i wykresu */
+function clearDisplay() {
+  currentInput = '';
+  display.textContent = '0';
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+/* Funkcja obliczania wyniku wyrażenia */
+function calculateResult() {
+  try {
+    let expr = currentInput.replace(/cot\(/g, '(1/Math.tan(')
+                           .replace(/sin\(/g, 'Math.sin(')
+                           .replace(/cos\(/g, 'Math.cos(')
+                           .replace(/tan\(/g, 'Math.tan('); // zamiana funkcji na JS
+    let result = eval(expr); // obliczenie wyniku
+    display.textContent = result;
+    currentInput = result.toString();
+  } catch {
+    display.textContent = 'Błąd'; // w razie błędu
+    currentInput = '';
+  }
+}
+
+/* Funkcja oblicza funkcję trygonometryczną */
+function calculateTrig(func) {
+  const x = parseFloat(currentInput); // konwersja na liczbę
+  if (isNaN(x)) {
+    display.textContent = 'Błąd';
+    return;
+  }
+  let result;
+  switch(func) {
+    case 'sin': result = Math.sin(x); break;
+    case 'cos': result = Math.cos(x); break;
+    case 'tan': result = Math.tan(x); break;
+    case 'cot': result = 1 / Math.tan(x); break;
+  }
+  display.textContent = result;
+  currentInput = result.toString();
+  plotFunction(func, x, result); // rysowanie wykresu
+}
+
+/* Funkcja rysująca wykres funkcji */
+function plotFunction(func, highlightX=null, highlightY=null) {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const width = canvas.width;
+  const height = canvas.height;
+  const scaleX = width / (4*Math.PI); // skala X
+  const scaleY = height / 4; // skala Y
+
+  // Rysowanie siatki
+  ctx.strokeStyle = '#ccc';
+  ctx.lineWidth = 1;
+  for(let i=0;i<=width;i+=50){
+    ctx.beginPath();
+    ctx.moveTo(i,0);
+    ctx.lineTo(i,height);
+    ctx.stroke();
+  }
+  for(let j=0;j<=height;j+=50){
+    ctx.beginPath();
+    ctx.moveTo(0,j);
+    ctx.lineTo(width,j);
+    ctx.stroke();
+  }
+
+  // Wykres funkcji
+  const colors = {sin:'blue', cos:'red', tan:'green', cot:'purple'};
+  ctx.strokeStyle = colors[func];
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  let i=0;
+
+  /* Funkcja rysująca wykres krok po kroku dla animacji */
+  function drawStep(){
+    if(i>width) return;
+    const x = (i/scaleX)-2*Math.PI; // obliczenie wartości X
+    let y;
+    switch(func){
+      case 'sin': y=Math.sin(x); break;
+      case 'cos': y=Math.cos(x); break;
+      case 'tan': y=Math.tan(x); break;
+      case 'cot': y=1/Math.tan(x); break;
+    }
+    if(y>10) y=10; // ograniczenie wartości Y
+    if(y<-10) y=-10;
+    const canvasY = height/2 - y*scaleY; // konwersja do współrzędnych canvas
+    if(i===0) ctx.moveTo(i,canvasY);
+    else ctx.lineTo(i,canvasY);
+    ctx.stroke();
+
+    // Podświetlenie punktu dla wpisanej liczby
+    if(highlightX!==null){
+      const px = (highlightX+2*Math.PI)*scaleX;
+      const py = height/2 - highlightY*scaleY;
+      ctx.fillStyle='orange';
+      ctx.beginPath();
+      ctx.arc(px,py,6,0,2*Math.PI);
+      ctx.fill();
+    }
+
+    i+=2;
+    requestAnimationFrame(drawStep); // animacja rysowania
+  }
+
+  drawStep();
+}
+</script>
+
+</body>
+</html>
