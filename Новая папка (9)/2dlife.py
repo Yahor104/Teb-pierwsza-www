@@ -53,7 +53,7 @@ for seed in seeds:
             "DOWN": random.randint(0, 29),
             "LEFT": random.randint(0, 29),
             "RIGHT": random.randint(0, 29),
-            "gen_if": random.randint(0, 99)
+            "gen_if": random.randint(0, 239)
         }
         seed["genom"].append(gen)
 
@@ -92,7 +92,7 @@ def restart_simulation():
                 "DOWN": random.randint(0, 29),
                 "LEFT": random.randint(0, 29),
                 "RIGHT": random.randint(0, 29),
-                "gen_if": random.randint(0, 99)
+                "gen_if": random.randint(0, 239)
             }
             seed["genom"].append(gen)
 
@@ -166,34 +166,55 @@ while True:
             segment["wood"] = True
             nr_gen = segment["genom_nr"]
             gen = tree["genom"][nr_gen]
-            if gen["gen_if"] < 10:
+            if gen["gen_if"] < 15:
                 if (segment["x"], segment["y"] - 1) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5
-                    if segment["genom_nr"] < 0:
-                        segment["genom_nr"] = 0
-                    continue
-            elif gen["gen_if"] < 20:
-                if (segment["x"], segment["y"] + 1) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 10
+                    segment["genom_nr"] = gen["gen_if"]
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
             elif gen["gen_if"] < 30:
-                if (new_x, segment["y"]) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 20
+                if (segment["x"], segment["y"] + 1) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] - 15
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            elif gen["gen_if"] < 40:
-                if (new_x, segment["y"]) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 30
+            elif gen["gen_if"] < 45:
+                if (segment["x"] - 1, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] - 30
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            elif gen["gen_if"] < 50:
-                e = gen["gen_if"] - 40 * 300
+            elif gen["gen_if"] < 60:
+                if (segment["x"] + 1, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] - 45
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 75:
+                e = (gen["gen_if"] - 60) * 300
                 if tree["energy"] < e:
-                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 40
+                    segment["genom_nr"] = gen["gen_if"] - 60
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 90:
+                e = (gen["gen_if"] - 75) * 30
+                if tree["energy"] < e:
+                    segment["genom_nr"] = gen["gen_if"] - 75
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 105:
+                e = (gen["gen_if"] - 90) * 300
+                if tree["energy"] > e:
+                    segment["genom_nr"] = gen["gen_if"] - 90
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 120:
+                e = (gen["gen_if"] - 105) * 30
+                if tree["energy"] > e:
+                    segment["genom_nr"] = gen["gen_if"] - 105
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
@@ -342,3 +363,4 @@ while True:
         world_energy += seed["energy"]
     generation += 1
     print("Trees:", len(trees), "World energy:", int(world_energy), "FPS:", int(clock.get_fps()), "Generation:", generation)
+
