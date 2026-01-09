@@ -18,6 +18,9 @@ clock = pygame.time.Clock()
 # Количество семян
 a = 1000
 
+# с како высоты energy
+c = 0
+
 generation = 0
 alive_trees = []
 trees = []
@@ -49,52 +52,49 @@ for seed in seeds:
             "UP": random.randint(0, 29),
             "DOWN": random.randint(0, 29),
             "LEFT": random.randint(0, 29),
-            "RIGHT": random.randint(0, 29)
+            "RIGHT": random.randint(0, 29),
+            "gen_if": random.randint(0, 99)
         }
         seed["genom"].append(gen)
 
 def restart_simulation():
     global trees, seeds, alive_trees, new_seeds, occupied, generation, paused
 
-    # Сброс состояния
+    generation = 0
+    alive_trees = []
     trees = []
     seeds = []
-    alive_trees = []
     new_seeds = []
     occupied = set()
-    paused = False
-    generation = 0
+    paused = False  # состояние паузы
 
-    # Нижний блок земли
+
+    # Нижние блоки
     for x in range(WIDTH):
-        occupied.add((x, HEIGHT - 1))
+        occupied.add((x, HEIGHT-1))
 
-    # Создание новых семян чуть выше земли
-    for _ in range(a):
+    # Создание начальных семян
+    for i in range(a):
         seed = {
             "x": random.randint(0, WIDTH - 1),
-            "y": random.randint(0, HEIGHT - 2),  # чуть выше нижнего блока
-            "energy": 1000,
-            "max_age": 70,
-            "genom": [],
+            "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
+            "energy": 3000,
+            "max_age" : random.randint(10, 100),
+            "genom": []
         }
+        seeds.append(seed)
 
-        # Геном семян
-        for _ in range(15):
-            gene = {
+    # Геном семян
+    for seed in seeds:
+        for i in range(15):
+            gen = {
                 "UP": random.randint(0, 29),
                 "DOWN": random.randint(0, 29),
                 "LEFT": random.randint(0, 29),
-                "RIGHT": random.randint(0, 29)
+                "RIGHT": random.randint(0, 29),
+                "gen_if": random.randint(0, 99)
             }
-            seed["genom"].append(gene)
-
-        seeds.append(seed)
-
-    # Очистка экрана
-    surface.fill((0, 0, 0))
-
-    print("Симуляция перезапущена! 🌱")
+            seed["genom"].append(gen)
 
 
 
@@ -126,6 +126,7 @@ while True:
                                 f"DOWN={gene['DOWN']:2d} "
                                 f"LEFT={gene['LEFT']:2d} "
                                 f"RIGHT={gene['RIGHT']:2d}"
+                                f"gen_if={gene['gen_if']:2d} "
                             )
                         print("-" * 40)
                         print("Energy:", tree["energy"])
@@ -146,7 +147,7 @@ while True:
         for segment in tree["segments"]:
             tree["energy"] -= 10
             if segment["wood"]:
-                base = HEIGHT - segment["y"]
+                base = HEIGHT - segment["y"] - c
 
                 # проверяем только сегменты сверху
                 multiplier = 3
@@ -165,6 +166,22 @@ while True:
             segment["wood"] = True
             nr_gen = segment["genom_nr"]
             gen = tree["genom"][nr_gen]
+            if gen["gen_if"] < 10:
+                if (segment["x"], segment["y"] - 1) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5)
+                    continue
+            if gen["gen_if"] < 20:
+                if (segment["x"], segment["y"] + 1) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 10
+                    continue
+            if gen["gen_if"] < 30:
+                if (new_x, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 20
+                    continue
+            if gen["gen_if"] < 40:
+                if (new_x, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 30
+                    continue
 
             # Вверх
             if segment["y"] > 0 and gen["UP"] < 15 and (segment["x"], segment["y"] - 1) not in occupied:
@@ -240,13 +257,16 @@ while True:
                         "max_age" : tree["max_age"],
                         "genom": copy.deepcopy(tree["genom"])
                     }
-                    a = random.randint(0, 3)
-                    if a == 3:
+                    b = random.randint(0, 3)
+                    if b == 3:
                         gene = new_seed["genom"][random.randint(0, 14)]
                         direction = random.choice(["UP","DOWN","LEFT","RIGHT"])
                         gene[direction] = random.randint(0,29)
-                    elif a == 2:
+                    elif b == 2:
                         new_seed["max_age"] += random.randint(-3, 3)
+                    elif b == 1:
+                        gene = new_seed["genom"][random.randint(0, 14)]
+                        gene["gen_if"] = random.randint(0, 99)
                     
 
                     seeds.append(new_seed)
