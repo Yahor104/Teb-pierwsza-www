@@ -38,21 +38,21 @@ def new_seed_add():
             "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
             "energy": 3000,
             "max_age" : random.randint(10, 100),
-            "genom": [{"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #0
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #1
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #2
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #3
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #4
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #5
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #6
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #7
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #8
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #9
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #10
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #11
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #12
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}, #13
-                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0}] #14
+            "genom": [{"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #0
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #1
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #2
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #3
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #4
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #5
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #6
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #7
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #8
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #9
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #10
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #11
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #12
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}, #13
+                    {"UP": 0,"DOWN": 0,"LEFT": 0,"RIGHT": 0,"gen_if": 0}] #14
         }
         seeds.append(seed)
 new_seed_add()
@@ -147,6 +147,30 @@ while True:
             segment["wood"] = True
             nr_gen = segment["genom_nr"]
             gen = tree["genom"][nr_gen]
+            if gen["gen_if"] < 10:
+                if (segment["x"], segment["y"] - 1) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            if gen["gen_if"] < 20:
+                if (segment["x"], segment["y"] + 1) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 10
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            if gen["gen_if"] < 30:
+                if (new_x, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 20
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            if gen["gen_if"] < 40:
+                if (new_x, segment["y"]) in occupied:
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 30
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
 
             # Вверх
             if segment["y"] > 0 and gen["UP"] < 15 and (segment["x"], segment["y"] - 1) not in occupied:
