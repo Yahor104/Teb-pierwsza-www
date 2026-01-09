@@ -168,19 +168,27 @@ while True:
             gen = tree["genom"][nr_gen]
             if gen["gen_if"] < 10:
                 if (segment["x"], segment["y"] - 1) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5)
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
                     continue
             if gen["gen_if"] < 20:
                 if (segment["x"], segment["y"] + 1) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 10
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 10
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
                     continue
             if gen["gen_if"] < 30:
                 if (new_x, segment["y"]) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 20
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 20
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
                     continue
             if gen["gen_if"] < 40:
                 if (new_x, segment["y"]) in occupied:
-                    segment["genom_nr"] = gen["gen_if"] + random.randint(0, 5) - 30
+                    segment["genom_nr"] = gen["gen_if"] + gen["gen_if"] - 5 - 30
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
                     continue
 
             # Вверх
