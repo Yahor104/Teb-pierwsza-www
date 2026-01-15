@@ -16,7 +16,7 @@ pygame.display.set_caption("Цикличный мир с деревьями")
 clock = pygame.time.Clock()
 
 # Количество семян
-a = 1500
+a = 500
 
 # с како высоты energy
 c = 0
@@ -30,7 +30,7 @@ occupied = set()
 paused = False  # состояние паузы
 seg_en = 0
 all_seg_en = 0
-max_gen_if = 540
+max_gen_if = 660
 energy_sun = 1.0
 start_energy = 11000
 
@@ -114,9 +114,9 @@ while True:
             elif event.key == pygame.K_r:
                 restart_simulation()  # перезапуск
             elif event.key == pygame.K_UP:
-                energy_sun += 0.01
+                energy_sun = 0.01
             elif event.key == pygame.K_DOWN:
-                energy_sun -= 0.01
+                energy_sun = 0.01
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
@@ -290,7 +290,26 @@ while True:
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-            
+            elif gen["gen_if"] < 285:
+                if tree["age"] < tree["max_age"] - gen["gen_if"] * 2:
+                    segment["genom_nr"] = gen["gen_if"] - 270
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+            elif gen["gen_if"] < 300:
+                if tree["age"] > tree["max_age"] - gen["gen_if"] * 2:
+                    segment["genom_nr"] = gen["gen_if"] - 285
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+            elif gen["gen_if"] < 315:
+                if tree["age"] < tree["max_age"] - gen["gen_if"] * 7:
+                    segment["genom_nr"] = gen["gen_if"] - 300
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+            elif gen["gen_if"] < 330:
+                if tree["age"] > tree["max_age"] - gen["gen_if"] * 7:
+                    segment["genom_nr"] = gen["gen_if"] - 315
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
 
             # Вверх
             if segment["y"] > 0 and gen["UP"] < 15 and (segment["x"], segment["y"] - 1) not in occupied:
@@ -435,4 +454,3 @@ while True:
         world_energy += seed["energy"]
     generation += 1
     print("Trees:", len(trees), "World energy:", int(world_energy), "FPS:", int(clock.get_fps()), "Generation:", generation, "Sun energy:", energy_sun)
-
