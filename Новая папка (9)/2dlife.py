@@ -16,7 +16,7 @@ pygame.display.set_caption("Цикличный мир с деревьями")
 clock = pygame.time.Clock()
 
 # Количество семян
-a = 1000
+a = 1500
 
 # с како высоты energy
 c = 0
@@ -32,7 +32,7 @@ seg_en = 0
 all_seg_en = 0
 max_gen_if = 540
 energy_sun = 1.0
-start_energy = 6000
+start_energy = 11000
 
 # Нижние блоки
 for x in range(WIDTH):
