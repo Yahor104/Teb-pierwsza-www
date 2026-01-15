@@ -28,7 +28,9 @@ seeds = []
 new_seeds = []
 occupied = set()
 paused = False  # состояние паузы
-
+seg_en = 0
+max_gen_if = 479
+energy_sun = 1.0
 
 # Нижние блоки
 for x in range(WIDTH):
@@ -53,7 +55,7 @@ for seed in seeds:
             "DOWN": random.randint(0, 29),
             "LEFT": random.randint(0, 29),
             "RIGHT": random.randint(0, 29),
-            "gen_if": random.randint(0, 239)
+            "gen_if": random.randint(0, max_gen_if)
         }
         seed["genom"].append(gen)
 
@@ -109,7 +111,10 @@ while True:
                 paused = not paused  # переключаем паузу
             elif event.key == pygame.K_r:
                 restart_simulation()  # перезапуск
-
+            elif event.key == pygame.K_UP:
+                energy_sun += 0.01
+            elif event.key == pygame.K_DOWN:
+                energy_sun -= 0.01
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mx, my = event.pos
@@ -143,6 +148,10 @@ while True:
     # Рост деревьев
     alive_trees = []
     for tree in trees:
+        for segment in tree["segments"]:
+            tree["energy"] -= 10
+            if segment["wood"]:
+                seg_en += 1
         new_segments = []
         for segment in tree["segments"]:
             tree["energy"] -= 10
@@ -159,7 +168,7 @@ while True:
                     if multiplier > 3:
                         multiplier = 3
 
-                tree["energy"] += base * multiplier
+                tree["energy"] += base * multiplier * energy_sun
                 continue
 
 
@@ -218,6 +227,55 @@ while True:
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
+            elif gen["gen_if"] < 135:
+                if len(tree["segments"]) < gen["gen_if"] + tree["max_age"] * 1:
+                    segment["genom_nr"] = gen["gen_if"] - 120
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 150:
+                if len(tree["segments"]) > gen["gen_if"] + tree["max_age"] * 1:
+                    segment["genom_nr"] = gen["gen_if"] - 135
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 165:
+                if len(tree["segments"]) < gen["gen_if"] + tree["max_age"] * 2:
+                    segment["genom_nr"] = gen["gen_if"] - 150
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 180:
+                if len(tree["segments"]) > gen["gen_if"] + tree["max_age"] * 2:
+                    segment["genom_nr"] = gen["gen_if"] - 165
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 195:
+                if seg_en < gen["gen_if"] * 20:
+                    segment["genom_nr"] = gen["gen_if"] - 180
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 210:
+                if seg_en > gen["gen_if"] * 20:
+                    segment["genom_nr"] = gen["gen_if"] - 195
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 225:
+                if seg_en < gen["gen_if"] * 60:
+                    segment["genom_nr"] = gen["gen_if"] - 210
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 240:
+                if seg_en > gen["gen_if"] * 60:
+                    segment["genom_nr"] = gen["gen_if"] - 180
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+
 
             # Вверх
             if segment["y"] > 0 and gen["UP"] < 15 and (segment["x"], segment["y"] - 1) not in occupied:
@@ -268,7 +326,7 @@ while True:
                 segment["seed"] = True
             if segment["seed"] == True:
                 segment["wood"] = False
-
+        seg_en = 0
         tree["segments"].extend(new_segments)
         tree["age"] += 1
         if tree["age"] < tree["max_age"] and tree["energy"] > 0:
@@ -302,12 +360,11 @@ while True:
                         new_seed["max_age"] += random.randint(-3, 3)
                     elif b == 1:
                         gene = new_seed["genom"][random.randint(0, 14)]
-                        gene["gen_if"] = random.randint(0, 99)
+                        gene["gen_if"] = random.randint(0, max_gen_if)
                     
 
                     seeds.append(new_seed)
                     # occupied.add((ds["x"], ds["y"]))  # ❌ не нужно
-
 
     trees = alive_trees
 
@@ -362,5 +419,5 @@ while True:
     for seed in seeds:
         world_energy += seed["energy"]
     generation += 1
-    print("Trees:", len(trees), "World energy:", int(world_energy), "FPS:", int(clock.get_fps()), "Generation:", generation)
+    print("Trees:", len(trees), "World energy:", int(world_energy), "FPS:", int(clock.get_fps()), "Generation:", generation, "Sun energy:", energy_sun)
 
