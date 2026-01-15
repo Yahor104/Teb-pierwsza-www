@@ -29,8 +29,10 @@ new_seeds = []
 occupied = set()
 paused = False  # состояние паузы
 seg_en = 0
-max_gen_if = 479
+all_seg_en = 0
+max_gen_if = 540
 energy_sun = 1.0
+start_energy = 6000
 
 # Нижние блоки
 for x in range(WIDTH):
@@ -41,7 +43,7 @@ for i in range(a):
     seed = {
         "x": random.randint(0, WIDTH - 1),
         "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
-        "energy": 3000,
+        "energy": start_energy,
         "max_age" : random.randint(10, 100),
         "genom": []
     }
@@ -80,7 +82,7 @@ def restart_simulation():
         seed = {
             "x": random.randint(0, WIDTH - 1),
             "y": random.randint(0, HEIGHT - 2),  # не на нижнем блоке
-            "energy": 3000,
+            "energy": start_energy,
             "max_age" : random.randint(10, 100),
             "genom": []
         }
@@ -151,7 +153,7 @@ while True:
         for segment in tree["segments"]:
             tree["energy"] -= 10
             if segment["wood"]:
-                seg_en += 1
+                all_seg_en += 1
         new_segments = []
         for segment in tree["segments"]:
             tree["energy"] -= 10
@@ -169,6 +171,7 @@ while True:
                         multiplier = 3
 
                 tree["energy"] += base * multiplier * energy_sun
+                seg_en = base * multiplier * energy_sun
                 continue
 
 
@@ -252,30 +255,42 @@ while True:
                         segment["genom_nr"] = 0
                     continue
             elif gen["gen_if"] < 195:
-                if seg_en < gen["gen_if"] * 20:
+                if all_seg_en < gen["gen_if"] * 20:
                     segment["genom_nr"] = gen["gen_if"] - 180
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
             elif gen["gen_if"] < 210:
-                if seg_en > gen["gen_if"] * 20:
+                if all_seg_en > gen["gen_if"] * 20:
                     segment["genom_nr"] = gen["gen_if"] - 195
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
             elif gen["gen_if"] < 225:
-                if seg_en < gen["gen_if"] * 60:
+                if all_seg_en < gen["gen_if"] * 60:
                     segment["genom_nr"] = gen["gen_if"] - 210
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
             elif gen["gen_if"] < 240:
-                if seg_en > gen["gen_if"] * 60:
-                    segment["genom_nr"] = gen["gen_if"] - 180
+                if all_seg_en > gen["gen_if"] * 60:
+                    segment["genom_nr"] = gen["gen_if"] - 225
                     if segment["genom_nr"] < 0:
                         segment["genom_nr"] = 0
                     continue
-
+            elif gen["gen_if"] < 255:
+                if seg_en > gen["gen_if"]* 2:
+                    segment["genom_nr"] = gen["gen_if"] - 240
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            elif gen["gen_if"] < 270:
+                if seg_en > gen["gen_if"] * 2:
+                    segment["genom_nr"] = gen["gen_if"] - 255
+                    if segment["genom_nr"] < 0:
+                        segment["genom_nr"] = 0
+                    continue
+            
 
             # Вверх
             if segment["y"] > 0 and gen["UP"] < 15 and (segment["x"], segment["y"] - 1) not in occupied:
@@ -326,7 +341,7 @@ while True:
                 segment["seed"] = True
             if segment["seed"] == True:
                 segment["wood"] = False
-        seg_en = 0
+        all_seg_en = 0
         tree["segments"].extend(new_segments)
         tree["age"] += 1
         if tree["age"] < tree["max_age"] and tree["energy"] > 0:
