@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Ewolucja – fotosynteza i mięsożercy</title>
+<style>
+  body {
+    background: #0b1020;
+    color: #fff;
+    font-family: Arial;
+    text-align: center;
+    padding: 20px;
+  }
+
+  #world {
+    display: grid;
+    grid-template-columns: repeat(30, 20px);
+    grid-template-rows: repeat(30, 20px);
+    gap: 1px;
+    margin: 20px auto;
+    width: fit-content;
+  }
+
+  .cell {
+    width: 20px;
+    height: 20px;
+    background: #111;
+  }
+
+  .plant {
+    background: #2ecc71;
+  }
+
+  .pred {
+    background: #e74c3c;
+  }
+
+  #info {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  #pauseBtn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Ewolucja 2D – fotosynteza i mięsożercy</h1>
+<p>Światło jest zawsze. Każdy organizm wykonuje tylko jedną akcję na turę.</p>
+
+<button id="pauseBtn">⏸ Pauza</button>
+<div id="info">Organizmy: 0</div>
+
+<div id="world"></div>
+
+<script>
+const SIZE = 30;
+
+const MOVE_COST = 1;
+const PHOTOSYNTHESIS_GAIN = 1;
+const EAT_GAIN = 12;
+const FOOD_GAIN = 5;
+const REPRODUCE_THRESHOLD = 18;
+const REPRODUCE_COST = 10;
+const MUTATION_CHANCE = 0.2;
+
+let world = [];
+let organisms = [];
+let poison = new Set();
+let food = new Set();
+let paused = false;
+
+// ---------------- GENY ----------------
+
+function createGene() {
+  return {
+    UP: Math.floor(Math.random() * 30),
+    DOWN: Math.floor(Math.random() * 30),
+    LEFT: Math.floor(Math.random() * 30),
+    RIGHT: Math.floor(Math.random() * 30),
+    gen_if: Math.floor(Math.random() * 240),
+    make_food: Math.random() < 0.3 ? 1 : 0
+  };
+}
+
+function createGenom() {
+  const arr = [];
+  for (let i = 0; i < 15; i++) arr.push(createGene());
+  return arr;
+}
+
+// --------------------------------------
+
+// tworzenie mapy
+const worldDiv = document.getElementById("world");
+for (let i = 0; i < SIZE * SIZE; i++) {
+  const cell = document.createElement("div");
+  cell.classList.add("cell");
+  worldDiv.appendChild(cell);
+  world.push({ org: null, div: cell });
+}
+
+// organizm
+function createOrganism(x, y, type, energy = 10, genes = null) {
+  if (!genes) genes = createGenom();
+
+  const org = { x, y, type, energy, genes, id: Math.random() };
+  organisms.push(org);
+  world[y * SIZE + x].org = org;
+}
+
+function inBounds(x, y) {
+  return x >= 0 && y >= 0 && x < SIZE && y < SIZE;
+}
+
+function neighbors(x, y) {
+  return [
+    [x+1, y],
+    [x-1, y],
+    [x, y+1],
+    [x, y-1]
+  ].filter(([nx, ny]) => inBounds(nx, ny));
+}
+
+// ruch
+function moveOrganism(org) {
+  const dirs = neighbors(org.x, org.y);
+  if (dirs.length === 0) return;
+
+  const [nx, ny] = dirs[Math.floor(Math.random() * dirs.length)];
+  const oldCell = world[org.y * SIZE + org.x];
+  const newCell = world[ny * SIZE + nx];
+
+  const key = nx + "," + ny;
+
+  // POISON BLOCK
+  if (poison.has(key)) return;
+
+  // FOOD → energia
+  if (food.has(key)) {
+    food.delete(key);
+    org.energy += FOOD_GAIN;
+  }
+
+  if (org.type === "plant" && newCell.org) return;
+
+  if (org.type === "pred" && newCell.org && newCell.org !== org) {
+    org.energy += newCell.org.energy + EAT_GAIN;
+    organisms = organisms.filter(o => o !== newCell.org);
+  }
+
+  oldCell.org = null;
+  newCell.org = org;
+  org.x = nx;
+  org.y = ny;
+  org.energy -= MOVE_COST;
+}
+
+// fotosynteza
+function photosynthesis(org) {
+  org.energy += PHOTOSYNTHESIS_GAIN;
+}
+
+// rozmnażanie
+function reproduce(org) {
+  if (org.energy < REPRODUCE_THRESHOLD) return false;
+
+  const dirs = neighbors(org.x, org.y);
+  for (const [nx, ny] of dirs) {
+    const key = nx + "," + ny;
+    const cell = world[ny * SIZE + nx];
+
+    if (!cell.org && !poison.has(key) && !food.has(key)) {
+
+      let newGenes = org.genes.map(gene => {
+        const newGene = { ...gene };
+
+        if (Math.random() < MUTATION_CHANCE) newGene.UP = Math.floor(Math.random() * 30);
+        if (Math.random() < MUTATION_CHANCE) newGene.DOWN = Math.floor(Math.random() * 30);
+        if (Math.random() < MUTATION_CHANCE) newGene.LEFT = Math.floor(Math.random() * 30);
+        if (Math.random() < MUTATION_CHANCE) newGene.RIGHT = Math.floor(Math.random() * 30);
+        if (Math.random() < MUTATION_CHANCE) newGene.gen_if = Math.floor(Math.random() * 240);
+        if (Math.random() < MUTATION_CHANCE) newGene.make_food = Math.random() < 0.5 ? 1 : 0;
+
+        return newGene;
+      });
+
+      let type = org.type;
+      if (Math.random() < MUTATION_CHANCE) {
+        type = type === "plant" ? "pred" : "plant";
+      }
+
+      createOrganism(nx, ny, type, 10, newGenes);
+      org.energy -= REPRODUCE_COST;
+      return true;
+    }
+  }
+  return false;
+}
+
+// render
+function render() {
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    const cell = world[i];
+    const x = i % SIZE;
+    const y = Math.floor(i / SIZE);
+    const key = x + "," + y;
+
+    cell.div.className = "cell";
+
+    if (poison.has(key)) {
+      cell.div.style.background = "#9b59b6";
+      continue;
+    }
+
+    if (food.has(key)) {
+      cell.div.style.background = "#f1c40f";
+      continue;
+    }
+
+    if (cell.org) cell.div.classList.add(cell.org.type);
+  }
+
+  document.getElementById("info").textContent =
+    "Organizmy: " + organisms.length;
+}
+
+// tasowanie
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// główna tura
+function tick() {
+  if (!paused) {
+    const order = [...organisms];
+    shuffle(order);
+
+    for (const org of order) {
+      if (!organisms.includes(org)) continue;
+      if (org.energy <= 0) continue;
+
+      // POISON → FOOD (jeśli ma gen)
+      const neigh = neighbors(org.x, org.y);
+      for (const [nx, ny] of neigh) {
+        const key = nx + "," + ny;
+        if (poison.has(key)) {
+          const gene = org.genes[0];
+          if (gene.make_food === 1) {
+            poison.delete(key);
+            food.add(key);
+          }
+        }
+      }
+
+      if (org.type === "plant") {
+        photosynthesis(org);
+        if (!reproduce(org)) moveOrganism(org);
+
+      } else if (org.type === "pred") {
+        const neigh = neighbors(org.x, org.y);
+        let ate = false;
+
+        for (const [nx, ny] of neigh) {
+          const cell = world[ny * SIZE + nx];
+          if (cell.org && cell.org !== org) {
+            const oldCell = world[org.y * SIZE + org.x];
+            oldCell.org = null;
+            org.energy += cell.org.energy + EAT_GAIN;
+            organisms = organisms.filter(o => o !== cell.org);
+            cell.org = org;
+            org.x = nx;
+            org.y = ny;
+            org.energy -= MOVE_COST;
+            ate = true;
+            break;
+          }
+        }
+
+        if (!ate) {
+          if (!reproduce(org)) moveOrganism(org);
+        }
+      }
+
+      if (org.energy <= 0) {
+        world[org.y * SIZE + org.x].org = null;
+        poison.add(org.x + "," + org.y);
+        organisms = organisms.filter(o => o !== org);
+      }
+    }
+  }
+
+  render();
+  requestAnimationFrame(tick);
+}
+
+// PAUZA
+document.getElementById("pauseBtn").onclick = () => {
+  paused = !paused;
+  document.getElementById("pauseBtn").textContent =
+    paused ? "▶ Start" : "⏸ Pauza";
+};
+
+// start – 20 organizmów
+for (let i = 0; i < 20; i++) {
+  const x = Math.floor(Math.random() * SIZE);
+  const y = Math.floor(Math.random() * SIZE);
+  const type = Math.random() < 0.5 ? "plant" : "pred";
+  createOrganism(x, y, type, 10, createGenom());
+}
+
+render();
+tick();
+</script>
+
+</body>
+</html>
