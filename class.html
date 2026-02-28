@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+        <script>
+        /**
+        * Quer(selector, where = document):
+        *   selector=co wybierasz 
+        *   where=gdzie wybierasz
+        * each(callback) - callback=funkcja do każdego wybranego
+        * on(event, callback) - do kazdego wybranego:
+        *   event=event w EventListener 
+        *   callback=funkczja do EventListener
+        */
+        class Quer {
+            constructor(selector, where = document) {
+                this.self = where.querySelector(selector)
+                this.elems = where.querySelectorAll(selector)
+            }
+            each(callback) {
+                for( let elem of this.elems) {
+                    callback(elem)
+                }
+                return this
+            }
+            on(event, callback) {
+                for( let elem of this.elems) {
+                    elem.addEventListener(event, callback)
+                }
+                return this
+            }
+        }
+
+        /**
+         * Elem(tag, parent = document.body, number = 1):
+         *   tag=jakiego typu element tworzysz (np. "div")
+         *   parent=gdzie element ma zostać dodany
+         *   number=ile elementów utworzyć
+         *
+         * each(callback) - callback=funkcja do każdego utworzonego elementu
+         * on(event, callback) - do każdego elementu:
+         *   event=event w EventListener
+         *   callback=funkcja do EventListener
+         */
+        class Elem {
+            constructor(tag, parent = document.body, number = 1) {
+                this.elems = []
+                for (let i = 0; i < number; i++) {
+                    const element = document.createElement(tag)
+                    this.elems.push(element)
+                    parent.appendChild(element)
+                }
+                this.self = this.elems[0] || null
+            }
+
+            each(callback) {
+                for (let elem of this.elems) {
+                    callback(elem)
+                }
+                return this
+            }
+
+            on(event, callback) {
+                return this.each(elem =>
+                    elem.addEventListener(event, callback)
+                )
+            }
+        }
+
+        new Elem('h1', document.body, 5).each(function(h1) {
+            h1.textContent = Math.random()
+        }).on('click', function() {
+            this.textContent = Math.random()
+        })
+
+        // for (let i = 0; i < 5; i++) {
+        //     let h1 = document.createElement('h1')
+        //     h1.textContent = Math.random()
+        //     h1.addEventListener('click', function() {
+        //         h1.textContent = Math.random()
+        //     })
+        //     document.body.appendChild(h1)
+        // }
+        </script>
+</body>
+</html>
