@@ -25,6 +25,8 @@ for i in range(100):
         "now_gen" : 0,
         "x" : random.randint(0, WIDTH - 1),
         "y" : random.randint(0, HEIGHT - 1),
+        "max_age" : random.randint(100, 500),
+        "age" : 0,
         "genom" : []
     }
     for j in range(15):
@@ -52,29 +54,36 @@ while running:
     for cell in cells:
         cell["energy"] -= 1
         gen = cell["genom"][cell["now_gen"]]
+        cell["age"] += 1
         if gen["do"] == 0:
             cell["energy"] += 2
             pygame.draw.rect(surface, (0, 255, 0), (cell["x"], cell["y"], 1, 1))
         elif gen["do"] == 1:
-            ate = False
-            for other in cells:
-                if other is cell:
+            neighbors = [
+                (cell["x"], cell["y"] - 1),
+                (cell["x"], cell["y"] + 1),
+                (cell["x"] - 1, cell["y"]),
+                (cell["x"] + 1, cell["y"]),
+            ]
+
+            for nx, ny in neighbors:
+                nx %= WIDTH
+                ny %= HEIGHT
+
+                # jeśli pole nie jest zajęte — nie ma po co szukać
+                if (nx, ny) not in ocupited:
                     continue
 
-                # 4 sąsiedzi
-                if other["x"] == cell["x"] and other["y"] == cell["y"] - 1:
-                    ate = True
-                elif other["x"] == cell["x"] and other["y"] == cell["y"] + 1:
-                    ate = True
-                elif other["x"] == cell["x"] - 1 and other["y"] == cell["y"]:
-                    ate = True
-                elif other["x"] == cell["x"] + 1 and other["y"] == cell["y"]:
-                    ate = True
+                # pole jest zajęte → szukamy tylko tej jednej komórki
+                for other in cells:
+                    if other["x"] == nx and other["y"] == ny and other is not cell:
+                        cell["energy"] += other["energy"] / 2
+                        other["energy"] = -1000
+                        break
+                else:
+                    continue  # nie znaleziono komórki, szukamy dalej
 
-                if ate:
-                    cell["energy"] += other["energy"]
-                    other["energy"] = -1000
-                    break
+                break  # zjedzono, kończymy
 
             pygame.draw.rect(surface, (255, 255, 0), (cell["x"], cell["y"], 1, 1))
         elif gen["do"] == 2:
@@ -103,7 +112,9 @@ while running:
             pygame.draw.rect(surface, (255, 255, 255), (cell["x"], cell["y"], 1, 1))
         elif gen["do"] == 4:
             pygame.draw.rect(surface, (255, 255, 255), (cell["x"], cell["y"], 1, 1))
-        if cell["energy"] <= 0:
+
+
+        if cell["energy"] <= 0 or cell["age"] >= cell["max_age"]:
             ocupited.discard((cell["x"], cell["y"]))
             continue
         elif cell["energy"] >= 200:
@@ -112,6 +123,8 @@ while running:
                 "now_gen" : 0,
                 "x" : cell["x"],
                 "y" : cell["y"],
+                "max_age" : cell["max_age"],
+                "age" : 0,
                 "genom" : copy.deepcopy(cell["genom"])
             }
             # UP
@@ -126,8 +139,6 @@ while running:
             # LEFT
             elif ((new_cell["x"] - 1) % WIDTH, new_cell["y"]) not in ocupited:
                 new_cell["x"] = (new_cell["x"] - 1) % WIDTH
-            else:
-                continue
 
 
             cell["energy"] /= 2
@@ -140,6 +151,8 @@ while running:
                     gen["do_2"] = random.randint(0, 3)
                 else:
                     gen["next"] = random.randint(0, 14)
+            elif random.randint(0, 3) == 1:
+                new_cell["max_age"] += random.randint(-20, 20)
 
             alive.append(new_cell)
             ocupited.add((new_cell["x"], new_cell["y"]))
