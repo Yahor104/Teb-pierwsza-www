@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .kafelek_kal {
+            background-color: red;
+        }
+        .kalendarz {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <button class = "miesiac-btn"></button>
+        <span id = "miesiac_name"></span>
+        <button class = "miesiac-btn"></button>
+    </nav>
+    <section id = "kalendarz"></section>
+    <script>
+        function ile_dni(miesiac_nr, rok) {
+            if (miesiac_nr == 2) {
+                if (rok % 4 == 0) {
+                    return 29
+                } else {
+                    return 28
+                }
+            }
+            switch (miesiac_nr) {
+                case 1:
+                case 3:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    return 31
+                case 4:
+                case 6:
+                case 9:
+                case 11:
+                    return 30
+            }
+        }
+        function kafelki_kalendarza(ile) {
+            const kalendarz = document.querySelector("#kalendarz")
+            Array.from(kalendarz.children).forEach(item =>(item.remove))
+
+            for(let i = 1; i<=ile;i++) {
+                let kafelek = document.createElement("div")
+                kafelek.classList.add("kafelek_kal")
+                kalendarz.appendChild(kafelek)
+            }
+        }
+
+        let miesiac = (new Date()).getMonth()+1
+        let rok = new Date().getFullYear()
+        let godzinka = new Date().getHours()
+        let minutka = new Date().getMinutes()
+        const nazwy_miesiacy = [
+            "styczeń",
+            "luty",
+            "marzec",
+            "kwiecień",
+            "maj",
+            "czerwiec",
+            "lipiec",
+            "sierpień",
+            "wrzesień",
+            "pażdziernik",
+            "listopad",
+            "grudzień"
+        ]
+
+        function nameMiesziacov() {
+            document.querySelector("#miesiac_name").textContent = nazwy_miesiacy[miesiac-1]
+        }
+
+        function loop_rocczki() {
+            if(miesiac==13) {
+                miesiac = 1
+                rok++
+            } else if(miesiac=0) {
+                miesiac = 12
+                rok--
+            }
+        }
+
+
+        nameMiesziacov()
+
+        document.querySelectorAll(".miesiac-btn").forEach((item, index) => {
+            if(index == 0) {
+                item.addEventListener("click", ()=> {
+                    miesiac--
+                    loop_rocczki()
+                    nameMiesziacov()
+                    kafelki_kalendarza(ile_dni(miesiac))
+                })
+            } else {
+                item.addEventListener("click", ()=> {
+                    miesiac++
+                    loop_rocczki()
+                    nameMiesziacov()
+                    kafelki_kalendarza(ile_dni(miesiac))
+                })
+            }
+            
+        })
+        kafelki_kalendarza(ile_dni(miesiac))
+    </script>
+</body>
+</html>
