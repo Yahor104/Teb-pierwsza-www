@@ -1,0 +1,215 @@
+import pygame
+import random
+import copy
+import sys
+
+pygame.init()
+WIDTH, HEIGHT = 400, 100
+SCALE = 4
+
+screen = pygame.display.set_mode((WIDTH*SCALE, HEIGHT*SCALE))
+pygame.display.set_caption('Цикличный мир с деревьями')
+
+surface = pygame.Surface((WIDTH, HEIGHT))
+
+pygame.display.set_caption('Цикличный мир с деревьями')
+clock = pygame.time.Clock()
+
+trees = []
+seeds = []
+ocupited = set()
+paused = False
+max_gen_if = 0
+
+for x in range(WIDTH):
+    ocupited.add((x, HEIGHT-1))
+
+for i in range(500):
+    seed = {
+        'energy' : 2000,
+        'x': random.randint(0, WIDTH - 1),
+        'y': random.randint(0, HEIGHT - 2),
+        'max_age' : random.randint(10, 100),
+        'genom' : []
+    }
+    for j in range(15):
+        gen = {
+            'UP' : random.randint(0, 29),
+            'DOWN' : random.randint(0, 29),
+            'LEFT' : random.randint(0, 29),
+            'RIGHT' : random.randint(0, 29),
+            'gen_if': random.randint(0, 239)
+        }
+        seed['genom'].append(gen)
+    seeds.append(seed)
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                paused = not paused
+    
+    if paused:
+        pygame.display.flip()
+        clock.tick(60)
+        continue
+
+
+    surface.fill((0, 0, 0))
+
+    alive_trees = []
+    for tree in trees:
+        tree['age'] += 1
+        if tree['age'] < tree['max_age'] and tree['energy'] > 0:
+            alive_trees.append(tree)
+        else:
+            for seg in tree['segments_done']:
+                ocupited.discard((seg['x'], seg['y']))
+            if tree['energy'] > 0:
+                dead_seeds = []
+                for seg in tree['segments']:
+                    ocupited.discard((seg['x'], seg['y']))
+                    dead_seeds.append(seg)
+
+                if dead_seeds:
+                    en_per_seed = tree['energy'] / len(dead_seeds)
+                    tree['energy'] = 0
+
+                    for ds in dead_seeds:
+                        new_seed = {
+                            'x' : ds['x'],
+                            'y' : ds['y'],
+                            'energy' : en_per_seed,
+                            'max_age' : tree['max_age'],
+                            'genom' : copy.deepcopy(tree['genom'])
+                        }
+                        b = random.randint(0, 3)
+                        if b == 3:
+                            gene = new_seed['genom'][random.randint(0, 14)]
+                            direction = random.choice(['UP','DOWN','LEFT','RIGHT'])
+                            gene[direction] = random.randint(0,29)
+                        elif b == 2:
+                            new_seed['max_age'] += random.randint(-3, 3)
+                        elif b == 1:
+                            gene = new_seed['genom'][random.randint(0, 14)]
+                            gene['gen_if'] = random.randint(0, max_gen_if)
+                        
+
+                        seeds.append(new_seed)
+            else:
+                for seg in tree['segments']:
+                    ocupited.discard((seg['x'], seg['y']))
+            continue
+
+        for segment in tree['segments_done']:
+            tree['energy'] -= 10
+            base = HEIGHT - segment['y']
+            multiplier = 3
+            for yy in range(segment['y']):
+                if (segment['x'], yy) in ocupited:
+                    multiplier -= 1
+                if multiplier <= 0:
+                    multiplier = 0.2
+                    break
+
+            tree['energy'] += base * multiplier
+            pygame.draw.rect(surface, tree['color'], (segment['x'], segment['y'], 1, 1))
+
+        new_segments = []
+        to_done = []
+        for segment in tree['segments']:
+            tree['energy'] -= 10
+
+            if segment['seed']:
+                new_segments.append(segment)
+                pygame.draw.rect(surface, (255, 255, 255), (segment['x'], segment['y'], 1, 1))
+                continue
+
+            nr_gen = segment['genom_nr']
+            gen = tree['genom'][nr_gen]
+
+            if segment['y'] > 0 and gen['UP'] < 15 and (segment['x'], segment['y'] - 1) not in ocupited:
+                new_segments.append({
+                    'x': segment['x'],
+                    'y': segment['y'] - 1,
+                    'genom_nr': gen['UP'],
+                    'seed' : False
+                })
+                ocupited.add((segment['x'], segment['y'] - 1))
+
+            if segment['y'] < HEIGHT - 1 and gen['DOWN'] < 15 and (segment['x'], segment['y'] + 1) not in ocupited:
+                new_segments.append({
+                    'x': segment['x'],
+                    'y': segment['y'] + 1,
+                    'genom_nr': gen['DOWN'],
+                    'seed' : False
+                })
+                ocupited.add((segment['x'], segment['y'] + 1))
+
+            new_x = (segment['x'] - 1) % WIDTH
+            if gen['LEFT'] < 15 and (new_x, segment['y']) not in ocupited:
+                new_segments.append({
+                    'x': new_x,
+                    'y': segment['y'],
+                    'genom_nr': gen['LEFT'],
+                    'seed' : False
+                })
+                ocupited.add((new_x, segment['y']))
+
+            new_x = (segment['x'] + 1) % WIDTH
+            if gen['RIGHT'] < 15 and (new_x, segment['y']) not in ocupited:
+                new_segments.append({
+                    'x': new_x,
+                    'y': segment['y'],
+                    'genom_nr': gen['RIGHT'],
+                    'seed' : False
+                })
+                ocupited.add((new_x, segment['y']))
+            
+            if gen['UP'] > 15 and gen['DOWN'] > 15 and gen['LEFT'] > 15 and gen['RIGHT'] > 15:
+                pygame.draw.rect(surface, (255, 255, 255), (segment['x'], segment['y'], 1, 1))
+                segment['seed'] = True
+                continue
+
+            pygame.draw.rect(surface, (255, 255, 255), (segment['x'], segment['y'], 1, 1))
+            to_done.append(segment)
+        tree['segments'] = new_segments
+        tree['segments_done'].extend(to_done)
+
+    trees = alive_trees
+
+    new_seeds = []
+    for seed in seeds:
+        pygame.draw.rect(surface, (255, 255, 255), (seed['x'], seed['y'], 1, 1))
+        seed['x'] = seed['x'] % WIDTH
+        if (seed['x'], seed['y'] + 1) not in ocupited and seed['y'] != HEIGHT-2:
+            seed['y'] += 1
+            new_seeds.append(seed)
+        elif seed['y'] == HEIGHT-2:
+            new_tree = {
+                'color' : (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
+                'energy' : seed['energy'],
+                'genom' : copy.deepcopy(seed['genom']),
+                'max_age' : seed['max_age'],
+                'age' : 0,
+                'segments' : [{
+                    'x': seed['x'],
+                    'y': seed['y'],
+                    'genom_nr': 0,
+                    'seed' : False
+                }],
+                'segments_done' : []
+            }
+            trees.append(new_tree)
+            ocupited.add((seed['x'], seed['y']))
+    seeds = new_seeds
+
+    for x in range(WIDTH):
+        pygame.draw.rect(surface, (200, 200, 0), (x, HEIGHT-1, 1, 1))
+    
+    screen.blit(pygame.transform.scale(surface, (WIDTH*SCALE, HEIGHT*SCALE)), (0, 0))
+    pygame.display.flip()
+    clock.tick(60)
