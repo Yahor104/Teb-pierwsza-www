@@ -37,7 +37,7 @@ public:
     }
     float kolo(float a) {
         float const P = 3.141592653589793238462643383279502884197169399375;
-        return a * (P * P);
+        return P * (a * a);
     }
 };
 
