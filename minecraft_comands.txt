@@ -8,3 +8,10 @@ repeat, always active: execute unless entity @e[name="Bob"] run bossbar set mine
 
 repeat, always active: execute if entity @e[name="Bob"] run bossbar set minecraft:1 visible true
 _________________________________________________________________________
+
+repeat, always active: execute unless data entity Erorr1012 Inventory[{id:"minecraft:paper", components:{"minecraft:custom_name":"tp to 5xfiver"}}] run tp Erorr1012 5xfiver
+
+repeat, always active: execute unless data entity Erorr1012 Inventory[{id:"minecraft:paper", components:{"minecraft:custom_name":"tp to 5xfiver"}}] run give Erorr1012 minecraft:paper[minecraft:custom_name="tp to 5xfiver"]
+
+repeat, always active: kill @e[type=item,nbt={Item:{id:"minecraft:paper",components:{"minecraft:custom_name":"tp to 5xfiver"}}}]
+________________________________________________________________________________________________________________________________
