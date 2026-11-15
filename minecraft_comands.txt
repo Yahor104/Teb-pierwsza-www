@@ -1,0 +1,10 @@
+summon minecraft:zombie ~ ~1 ~ {CustomName:"Bob",PersistanceRequired:1b,equipment:{head:{id:"minecraft:iron_helmet",count:1}},attributes:[{id:"max_health",base:100}, {id:"damage",base:10}, {id:"movement_speed",base:0.4}]}
+
+execute store result bossbar minecraft:1 value run data get entity @e[name="Bob",limit=1] Health
+
+bossbar set minecraft:1 players @a
+
+execute unless entity @e[name="Bob"] run bossbar set minecraft:1 visible false
+
+execute if entity @e[name="Bob"] run bossbar set minecraft:1 visible true
+_________________________________________________________________________
